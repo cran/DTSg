@@ -26,7 +26,7 @@ TS
 
 ## ------------------------------------------------------------------------
 TSc <- TS$clone(deep = TRUE)
-#  or clone(TS, deep = TRUE)
+# or 'clone(TS, deep = TRUE)'
 
 ## ------------------------------------------------------------------------
 TS <- DTSg$
@@ -39,7 +39,7 @@ TS
 ## ------------------------------------------------------------------------
 if (requireNamespace("magrittr", quietly = TRUE)) {
   library(magrittr)
-  
+
   TS <- new("DTSg", flow) %>%
     alter("2007-01-01", "2008-12-31") %>%
     colapply(interpolateLinear) %>%

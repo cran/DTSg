@@ -6,8 +6,16 @@ Install the latest release from CRAN:
 
 `install.packages("DTSg")`
 
+[![CRAN Version](https://www.r-pkg.org/badges/version/DTSg)](https://cran.r-project.org/package=DTSg)
+
 Install the development version from GitHub (requires the `devtools` package):
 
 `devtools::install_github("gisler/DTSg")`
 
 [![Build Status](https://travis-ci.org/gisler/DTSg.svg?branch=master)](https://travis-ci.org/gisler/DTSg)
+
+## Getting Started
+
+[A. Basic Usage](https://CRAN.R-project.org/package=DTSg/vignettes/basicUsage.html)
+
+[B. Advanced Usage](https://CRAN.R-project.org/package=DTSg/vignettes/advancedUsage.html)
