@@ -1,16 +1,16 @@
 self <- NULL # no R CMD check note
 
-#' S3 Wrapper Generator
+#' S3 Wrapper Method Generator
 #'
 #' Generates S3 wrapper methods for public methods of \code{R6ClassGenerator}s,
 #'  but can also be used to generate \dQuote{plain} function wrappers.
 #'
-#' @param R6Method An \code{\link{expression}} of a public method of an
+#' @param R6Method An \code{\link{expression}} with a public method of an
 #'  \code{R6ClassGenerator}.
 #' @param self A character string specifying the name of the parameter which
-#'  takes the R6 object.
-#' @param dots A logical specifying if a \code{\dots} parameter is added as last
-#'  parameter in case none already exists. This might be required for S3
+#'  will take the R6 object.
+#' @param dots A logical specifying if a \code{\dots} parameter shall be added
+#'  as last parameter in case none already exists. This might be required for S3
 #'  generic/method consistency.
 #'
 #' @return Returns a function with the required parameters which captures its
@@ -20,19 +20,18 @@ self <- NULL # no R CMD check note
 #'  \code{\link{expression}}
 #'
 #' @examples
-#' # generate S3 wrapper for aggregate of DTSg
-#' aggregate.DTSg <- S3WrapperGenerator(
-#'   R6Method = expression(DTSg$public_methods$aggregate)
+#' # generate S3 wrapper method for alter of DTSg
+#' alter.DTSg <- S3WrapperGenerator(
+#'   R6Method = expression(DTSg$public_methods$alter)
 #' )
 #'
 #' @export
 S3WrapperGenerator <- function(R6Method, self = "x", dots = TRUE) {
   assert_is_expression(R6Method)
-  R6MethodParts <- strsplit(as.character(R6Method), "\\$")[[1L]]
-  if (class(eval(as.name(R6MethodParts[1L]))) != "R6ClassGenerator") {
+  if (class(eval(R6Method[[1L]][[2L]][[2L]])) != "R6ClassGenerator") {
     stop('"R6Method" must contain an "R6ClassGenerator".', call. = FALSE)
   }
-  if (R6MethodParts[2L] != "public_methods") {
+  if (R6Method[[1L]][[2L]][[3L]] != "public_methods") {
     stop('"R6Method" must contain a public method of an "R6ClassGenerator".', call. = FALSE)
   }
   assert_is_function(eval(R6Method))
@@ -48,10 +47,8 @@ S3WrapperGenerator <- function(R6Method, self = "x", dots = TRUE) {
   }
 
   S3Method <- function() {
-    fun <- R6MethodParts[3L]
-
     call <- match.call()
-    call[[1L]] <- call("$", eval(as.name(self)), fun)
+    call[[1L]] <- call("$", as.name(self), R6Method[[1L]][[3L]])
     call[[2L]] <- NULL
 
     eval(call)

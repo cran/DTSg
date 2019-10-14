@@ -8,7 +8,7 @@
 \format{An object of class \code{R6ClassGenerator} of length 24.}
 \usage{
 new(Class, values, ID = "", parameter = "", unit = "", variant = "",
- aggregated = FALSE, fast = FALSE)
+ aggregated = FALSE, fast = FALSE, swallow = FALSE)
 }
 \arguments{
 \item{Class}{A character string. Must be \code{"DTSg"} in order to create a
@@ -39,6 +39,19 @@ subsequent timestamps (\code{TRUE}).}
 \item{fast}{A logical signalling if all rows (\code{FALSE}) or only the first
 1000 rows (\code{TRUE}) shall be used to check the object's integrity and
 for the automatic detection of the time series' periodicity.}
+
+\item{swallow}{A logical signalling if the object provided through the
+\code{values} argument shall be \dQuote{swallowed} by the \code{DTSg}
+object, i.e., no copy of the data shall be made. This is generally more
+ressource efficient, but only works if the object provided through the
+\code{values} argument is a \code{\link[data.table]{data.table}}. Be warned,
+however, that if the creation of the \code{DTSg} object fails for some
+reason, the first column of the provided
+\code{\link[data.table]{data.table}} might have been coerced to
+\code{\link{POSIXct}} and keyed (see \code{\link[data.table]{setkey}} for
+further information). Furthermore, all references to the \dQuote{swallowed}
+\code{\link[data.table]{data.table}} in the global environment are removed
+upon successfull creation of a \code{DTSg} object.}
 }
 \value{
 Returns a \code{DTSg} object.
@@ -54,9 +67,9 @@ The \code{DTSg} class is the working horse of the package. It is an
  method first and the object as its first argument (for instance,
  \code{cols(x)}). An exception is the \code{new} method. It is not an S3
  method, but an abused S4 constructor with the character string \code{"DTSg"}
- as its first argument. For the R6 interface the \code{DTSg} class generator
- has to be used to access the \code{new} method with the help of the \code{$}
- operator.
+ as its first argument. Regarding the R6 interface, the \code{DTSg} class
+ generator has to be used to access the \code{new} method with the help of
+ the \code{$} operator.
 }
 \note{
 Due to the \code{\link{POSIXct}} nature of the \emph{.dateTime} column, the
@@ -122,6 +135,8 @@ A \code{DTSg} object has the following fields or properties as they are often
      subsequent timestamps are the same (\code{TRUE}) or if some are
      different (\code{FALSE}). A, for instance, monthly time series is
      considered irregular in this sense (read-only).
+   \item \emph{timestamps:} An integer showing the total number of timestamps
+     of the time series (read-only).
    \item \emph{timezone:} A character string containing the time zone of the
      time series (read-only).
    \item \emph{unit:} Same as \code{unit} argument. It is added to the label
@@ -157,7 +172,7 @@ new(Class = "DTSg", values = flow, ID = "River Flow")
 \seealso{
 \code{\link[R6]{R6Class}}, \code{\link{data.frame}},
  \code{\link[data.table]{data.table}}, \code{\link{POSIXct}},
- \code{\link{difftime}}, \code{\link{clone}}, \code{\link{options}},
- \code{\link{list}}
+ \code{\link[data.table]{setkey}}, \code{\link{difftime}},
+ \code{\link{clone}}, \code{\link{options}}, \code{\link{list}}
 }
 \keyword{datasets}

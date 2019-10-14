@@ -1,12 +1,3 @@
-#' @import assertive.base
-#' @import assertive.numbers
-#' @import assertive.sets
-#' @import assertive.types
-#' @import data.table
-#' @import methods
-#' @import R6
-NULL
-
 #### Documentation ####
 #' DTSg Class
 #'
@@ -20,12 +11,12 @@ NULL
 #'  method first and the object as its first argument (for instance,
 #'  \code{cols(x)}). An exception is the \code{new} method. It is not an S3
 #'  method, but an abused S4 constructor with the character string \code{"DTSg"}
-#'  as its first argument. For the R6 interface the \code{DTSg} class generator
-#'  has to be used to access the \code{new} method with the help of the \code{$}
-#'  operator.
+#'  as its first argument. Regarding the R6 interface, the \code{DTSg} class
+#'  generator has to be used to access the \code{new} method with the help of
+#'  the \code{$} operator.
 #'
 #' @usage new(Class, values, ID = "", parameter = "", unit = "", variant = "",
-#'  aggregated = FALSE, fast = FALSE)
+#'  aggregated = FALSE, fast = FALSE, swallow = FALSE)
 #'
 #' @param Class A character string. Must be \code{"DTSg"} in order to create a
 #'  \code{DTSg} object. Otherwise a different object may or may not be created
@@ -48,6 +39,18 @@ NULL
 #' @param fast A logical signalling if all rows (\code{FALSE}) or only the first
 #'  1000 rows (\code{TRUE}) shall be used to check the object's integrity and
 #'  for the automatic detection of the time series' periodicity.
+#' @param swallow A logical signalling if the object provided through the
+#'  \code{values} argument shall be \dQuote{swallowed} by the \code{DTSg}
+#'  object, i.e., no copy of the data shall be made. This is generally more
+#'  ressource efficient, but only works if the object provided through the
+#'  \code{values} argument is a \code{\link[data.table]{data.table}}. Be warned,
+#'  however, that if the creation of the \code{DTSg} object fails for some
+#'  reason, the first column of the provided
+#'  \code{\link[data.table]{data.table}} might have been coerced to
+#'  \code{\link{POSIXct}} and keyed (see \code{\link[data.table]{setkey}} for
+#'  further information). Furthermore, all references to the \dQuote{swallowed}
+#'  \code{\link[data.table]{data.table}} in the global environment are removed
+#'  upon successfull creation of a \code{DTSg} object.
 #'
 #' @return Returns a \code{DTSg} object.
 #'
@@ -93,6 +96,8 @@ NULL
 #'      subsequent timestamps are the same (\code{TRUE}) or if some are
 #'      different (\code{FALSE}). A, for instance, monthly time series is
 #'      considered irregular in this sense (read-only).
+#'    \item \emph{timestamps:} An integer showing the total number of timestamps
+#'      of the time series (read-only).
 #'    \item \emph{timezone:} A character string containing the time zone of the
 #'      time series (read-only).
 #'    \item \emph{unit:} Same as \code{unit} argument. It is added to the label
@@ -134,8 +139,8 @@ NULL
 #'
 #' @seealso \code{\link[R6]{R6Class}}, \code{\link{data.frame}},
 #'  \code{\link[data.table]{data.table}}, \code{\link{POSIXct}},
-#'  \code{\link{difftime}}, \code{\link{clone}}, \code{\link{options}},
-#'  \code{\link{list}}
+#'  \code{\link[data.table]{setkey}}, \code{\link{difftime}},
+#'  \code{\link{clone}}, \code{\link{options}}, \code{\link{list}}
 #'
 #' @examples
 #' # new DTSg object
@@ -164,6 +169,7 @@ DTSg <- R6Class(
     .origDateTimeCol = character(),
     .parameter = character(),
     .periodicity = NULL,
+    .timestamps = integer(),
     .timezone = character(),
     .unit = character(),
     .values = data.table(),
@@ -200,6 +206,18 @@ DTSg <- R6Class(
       } else {
         value
       }
+    },
+
+    rmGlobalReferences = function(addr) {
+      globalObjs <- ls(".GlobalEnv", sorted = FALSE)
+
+      rmGlobalReferences <- function(globalObj, addr) {
+        if (addr == address(get(globalObj, envir = globalenv()))) {
+          rm(list = globalObj, envir = globalenv())
+        }
+      }
+
+      lapply(globalObjs, rmGlobalReferences, addr = addr)
     }
   ),
 
@@ -330,9 +348,11 @@ DTSg <- R6Class(
       } else {
         DT <- data.table(.dateTime = seq(from, to, by), key = ".dateTime")
       }
-      private$.values <- private$.values[DT]
+      if (by != private$.periodicity || nrow(DT) != private$.timestamps) {
+        private$.values <- private$.values[DT]
 
-      self$refresh()
+        self$refresh()
+      }
 
       invisible(self)
     },
@@ -401,7 +421,8 @@ DTSg <- R6Class(
       unit = "",
       variant = "",
       aggregated = FALSE,
-      fast = FALSE
+      fast = FALSE,
+      swallow = FALSE
     ) {
       assert_is_inherited_from(values, "data.frame")
       if (nrow(values) < 1L || ncol(values) < 2L) {
@@ -413,9 +434,14 @@ DTSg <- R6Class(
       if (anyDuplicated(names(values)[-1L]) > 0) {
         stop('Column names must not have any duplicates.', call. = FALSE)
       }
+      assert_is_a_bool(assert_all_are_not_na(swallow))
 
       if (is.data.table(values)) {
-        private$.values <- copy(values)
+        if (swallow) {
+          private$.values <- values
+        } else {
+          private$.values <- copy(values)
+        }
       } else {
         private$.values <- as.data.table(values)
       }
@@ -430,6 +456,10 @@ DTSg <- R6Class(
       self$fast <- fast
 
       self$refresh()
+
+      if (swallow) {
+        private$rmGlobalReferences(address(private$.values))
+      }
 
       if (private$.periodicity != "unrecognised") {
         self$alter(clone = FALSE)
@@ -515,13 +545,13 @@ DTSg <- R6Class(
             list(DT[
               !is.na(.group),
               .(.from = min(.dateTime), .to = max(.dateTime), .n = .N),
-              by = c(".col", ".group")
+              by = .(.col, .group)
             ])
           )
         }
       }
 
-      do.call(rbind, DTs)
+      rbindlist(DTs)
     },
 
     plot = function(
@@ -531,13 +561,12 @@ DTSg <- R6Class(
       secAxisCols  = NULL,
       secAxisLabel = ""
     ) {
-      if (!requireNamespace("xts", quietly = TRUE) ||
-          !requireNamespace("dygraphs", quietly = TRUE) ||
+      if (!requireNamespace("dygraphs", quietly = TRUE) ||
           !requireNamespace("RColorBrewer", quietly = TRUE)) {
         stop(
           sprintf(
-            "Packages %s, %s and %s must be installed for this method.",
-            deparse("xts"), deparse("dygraphs"), deparse("RColorBrewer")
+            "Packages %s and %s must be installed for this method.",
+            deparse("dygraphs"), deparse("RColorBrewer")
           ),
           call. = FALSE
         )
@@ -561,10 +590,6 @@ DTSg <- R6Class(
         assert_is_a_string(secAxisLabel)
       }
 
-      values <- as.xts.data.table(
-        private$.values[.dateTime >= from & .dateTime <= to, c(".dateTime", cols), with = FALSE]
-      )
-
       ylab <- ""
       if (private$.parameter != "") {
         ylab <- private$.parameter
@@ -576,7 +601,11 @@ DTSg <- R6Class(
         }
       }
 
-      plot <- dygraphs::dygraph(values, private$.ID, ylab = ylab)
+      plot <- dygraphs::dygraph(
+        private$.values[.dateTime >= from & .dateTime <= to, c(".dateTime", cols), with = FALSE],
+        private$.ID,
+        ylab = ylab
+      )
       plot <- dygraphs::dyOptions(
         plot,
         colors = RColorBrewer::brewer.pal(max(length(cols), 3L), "Set2"),
@@ -602,16 +631,25 @@ DTSg <- R6Class(
     },
 
     print = function() {
-      cat("Values:\n")
+      cat(  "Values:\n")
       print(private$.values, class = TRUE)
-      cat("\nID:          ", private$.ID, "\n", sep = "")
-      cat(  "Parameter:   ", private$.parameter, "\n", sep = "")
-      cat(  "Variant:     ", private$.variant, "\n", sep = "")
-      cat(  "Unit:        ", private$.unit, "\n", sep = "")
+      cat(  "\n")
+      if (private$.ID != "") {
+        cat("ID:          ", private$.ID          , "\n", sep = "")
+      }
+      if (private$.parameter != "") {
+        cat("Parameter:   ", private$.parameter   , "\n", sep = "")
+      }
+      if (private$.variant != "") {
+        cat("Variant:     ", private$.variant     , "\n", sep = "")
+      }
+      if (private$.unit != "") {
+        cat("Unit:        ", private$.unit        , "\n", sep = "")
+      }
       cat(  "Aggregated:  ", private$.isAggregated, "\n", sep = "")
-      cat(  "Regular:     ", private$.isRegular, "\n", sep = "")
+      cat(  "Regular:     ", private$.isRegular   , "\n", sep = "")
       if (is.character(private$.periodicity)) {
-        cat("Periodicity: ", private$.periodicity, "\n", sep = "")
+        cat("Periodicity: ", private$.periodicity , "\n", sep = "")
       } else {
         cat("Periodicity: ")
         print(private$.periodicity)
@@ -622,12 +660,15 @@ DTSg <- R6Class(
         cat("Max lag:     ")
         print(private$.maxLag)
       }
-      cat(  "Time zone:   ", private$.timezone, "\n", sep = "")
+      cat(  "Time zone:   ", private$.timezone    , "\n", sep = "")
+      cat(  "Timestamps:  ", private$.timestamps  , "\n", sep = "")
 
       invisible(self)
     },
 
     refresh = function() {
+      firstCol <- names(private$.values)[1L]
+
       if (!is_posixct(private$.values[[1L]])) {
         set(
           private$.values,
@@ -636,17 +677,19 @@ DTSg <- R6Class(
             private$.values[[1L]],
             as.POSIXct,
             tz = Sys.timezone(),
-            colname = names(private$.values)[1L]
+            colname = firstCol
           )
         )
       }
 
-      setnames(private$.values, 1L, ".dateTime")
-      setkey(private$.values, .dateTime)
+      if (!isTRUE(key(private$.values) == firstCol)) {
+        setkeyv(private$.values, firstCol)
+      }
 
-      private$.timezone <- attr(private$.values[[".dateTime"]], "tzone")
+      private$.timestamps <- nrow(private$.values)
+      private$.timezone <- attr(private$.values[[1L]], "tzone")
 
-      if (nrow(private$.values) < 2L) {
+      if (private$.timestamps < 2L) {
         zeroSecs <- difftime(as.POSIXct("2000-01-01", tz = "UTC"), as.POSIXct("2000-01-01", tz = "UTC"))
         private$.minLag <- zeroSecs
         private$.maxLag <- zeroSecs
@@ -655,13 +698,13 @@ DTSg <- R6Class(
         return(invisible(self))
       }
 
-      if (!private$.isFast || nrow(private$.values) < 1000L) {
-        len <- nrow(private$.values)
+      if (!private$.isFast || private$.timestamps < 1000L) {
+        len <- private$.timestamps
       } else {
         len <- 1000L
       }
 
-      lags <- round(diff(private$.values[[".dateTime"]][1:len]), 6)
+      lags <- round(diff(private$.values[[1L]][1:len]), 6)
       if (anyNA(lags)) {
         stop(".dateTime column must not have any NA values.", call. = FALSE)
       }
@@ -681,8 +724,8 @@ DTSg <- R6Class(
         private$.isRegular <- FALSE
         private$.periodicity <- "unrecognised"
 
-        from <- private$.values[[".dateTime"]][1L]
-        to   <- private$.values[[".dateTime"]][len]
+        from <- private$.values[[1L]][1L]
+        to   <- private$.values[[1L]][len]
 
         for (by in c(
           sprintf("%s DSTdays", c(1:15, 21L, 28L, 30L)),
@@ -699,8 +742,8 @@ DTSg <- R6Class(
             DT <- data.table(.dateTime = seq(from, to, by), key = ".dateTime")
           }
 
-          DT <- private$.values[DT]
-          lags <- diff(DT[[".dateTime"]])
+          DT <- private$.values[DT, on = sprintf("%s == .dateTime", firstCol)]
+          lags <- diff(DT[[1L]])
           if (sum(!is.na(DT[, -1L, with = FALSE])) ==
               sum(!is.na(private$.values[1:len, -1L, with = FALSE])) &&
               all(lags >= private$.minLag) && all(lags <= private$.maxLag)) {
@@ -709,6 +752,8 @@ DTSg <- R6Class(
           }
         }
       }
+
+      setnames(private$.values, 1L, ".dateTime")
 
       invisible(self)
     },
@@ -799,14 +844,31 @@ DTSg <- R6Class(
       summary(private$.values[, cols, with = FALSE], ...)
     },
 
-    values = function(reference = FALSE) {
+    values = function(
+      reference = FALSE,
+      drop = FALSE,
+      class = c("data.table", "data.frame")
+    ) {
       assert_is_a_bool(assert_all_are_not_na(reference))
+      assert_is_a_bool(assert_all_are_not_na(drop))
+      class <- match.arg(class)
 
-      if (reference) {
+      if (reference || drop) {
         values <- private$.values
+
+        if (drop) {
+          private$rmGlobalReferences(address(self))
+        }
       } else {
         values <- copy(private$.values)
+      }
+
+      if (!reference || drop) {
         setnames(values, 1L, private$.origDateTimeCol)
+
+        if (class == "data.frame") {
+          setDF(values)
+        }
       }
 
       values
@@ -874,6 +936,14 @@ DTSg <- R6Class(
     regular = function(value) {
       if (missing(value)) {
         private$.isRegular
+      } else {
+        stop("Read-only field.", call. = FALSE)
+      }
+    },
+
+    timestamps = function(value) {
+      if (missing(value)) {
+        private$.timestamps
       } else {
         stop("Read-only field.", call. = FALSE)
       }

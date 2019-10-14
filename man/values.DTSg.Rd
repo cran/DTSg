@@ -5,7 +5,8 @@
 \alias{values}
 \title{Get Values}
 \usage{
-\method{values}{DTSg}(x, reference = FALSE, ...)
+\method{values}{DTSg}(x, reference = FALSE, drop = FALSE,
+  class = c("data.table", "data.frame"), ...)
 }
 \arguments{
 \item{x}{A \code{\link{DTSg}} object (S3 method only).}
@@ -14,11 +15,20 @@
 reference to the \emph{values} is returned. See details for further
 information.}
 
+\item{drop}{A logical specifying if the object and all references to it shall
+be removed from the global environment after successfully querying its
+values. This feature allows for a ressource efficient destruction of a
+\code{\link{DTSg}} object while preserving its \emph{values.}}
+
+\item{class}{A character string specifying the class of the returned
+\emph{values.} \code{"data.frame"} only works if either a copy of the
+\emph{values} is returned or the object is dropped.}
+
 \item{\dots}{Not used (S3 method only).}
 }
 \value{
-Returns a \code{\link[data.table]{data.table}} or a reference to a
- \code{\link[data.table]{data.table}}.
+Returns a \code{\link[data.table]{data.table}}, a reference to a
+ \code{\link[data.table]{data.table}} or a \code{\link{data.frame}}.
 }
 \description{
 Queries the \emph{values} of a \code{\link{DTSg}} object.
@@ -27,13 +37,13 @@ Queries the \emph{values} of a \code{\link{DTSg}} object.
 A reference to the \emph{values} of a \code{\link{DTSg}} object can be used
  to modify them in place. This includes the \emph{.dateTime} column, which
  serves as the object's time index. Modifying this column can therefore
- endanger its integrity. In case needs to do so ever arise,
+ endanger the object's integrity. In case needs to do so ever arise,
  \code{\link{refresh}} should be called immediately afterwards in order to
  check the object's integrity.
 }
 \note{
 The original name of the \emph{.dateTime} column is restored when not
- returned as a reference.
+ returned as a reference or when dropped.
 }
 \examples{
 # new DTSg object
@@ -49,5 +59,5 @@ values(x = x)
 }
 \seealso{
 \code{\link{DTSg}}, \code{\link{refresh}},
- \code{\link[data.table]{data.table}}
+ \code{\link[data.table]{data.table}}, \code{\link{data.frame}}
 }

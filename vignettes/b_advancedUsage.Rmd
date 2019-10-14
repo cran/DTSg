@@ -19,7 +19,7 @@ knitr::opts_chunk$set(
 options("DTSgClone" = TRUE)
 ```
 
-This vignette illustrates some more advanced concepts of the `DTSg` package, namely reference semantics as well as chaining and piping.
+This vignette illustrates some more advanced concepts of the `DTSg` package, namely reference semantics, chaining and piping as well as swallowing and dropping.
 
 ---
 
@@ -35,7 +35,7 @@ TS
 
 ## Reference Semantics
 
-By default, every method manipulating the values of a `DTSg` object creates a copy of it. This behaviour can be overridden by setting their `clone` argument to `FALSE`. Globally, cloning can be controlled with the help of the *DTSgClone* option:
+By default, every method manipulating the *values* of a `DTSg` object creates a copy of it. This behaviour can be overridden by setting their `clone` argument to `FALSE`. Globally, cloning can be controlled with the help of the *DTSgClone* option:
 
 ```{r}
 TS$alter("2007-01-01", "2008-12-31")
@@ -88,3 +88,27 @@ if (requireNamespace("magrittr", quietly = TRUE)) {
   TS
 }
 ```
+
+## Swallowing and Dropping
+
+An extension to reference semantics of existing `DTSg` objects is reference semantics during object creation. This behaviour can be triggered with the help of the `swallow` argument of the `new` method. If set to `TRUE`, a `data.table` provided through the `values` argument is "swallowed" by the `DTSg` object, i.e., no copy of it is made and all references to it are removed from the global environment upon successful object creation:
+
+```{r}
+library(data.table)
+
+DT <- copy(flow)
+ls(pattern = "DT")
+TS <- DTSg$new(DT, swallow = TRUE)
+ls(pattern = "DT")
+```
+
+The opposite of swallowing is called dropping. This term refers to querying the *values* of a `DTSg` object as a reference while removing all references to the original `DTSg` object from the global environment at the same time:
+
+```{r}
+TS <- DTSg$new(flow)
+ls(pattern = "TS")
+DT <- TS$values(drop = TRUE)
+ls(pattern = "TS")
+```
+
+Please refer to the help pages for further details.

@@ -19,7 +19,7 @@ knitr::opts_chunk$set(
 options("DTSgClone" = TRUE)
 ```
 
-This vignette introduces the `DTSg` package, shows how to create objects of its main class and explains their two interfaces: R6 as code and S3 in comments. Familiarity with the `data.table` package helps better understanding certain parts of the vignette, but is not essential to follow it.
+This vignette introduces the `DTSg` package, shows how to create objects of its main as well as only class and explains their two interfaces: R6 as code and S3 in comments. Familiarity with the `data.table` package helps better understanding certain parts of the vignette, but is not essential to follow it.
 
 ---
 
@@ -50,19 +50,18 @@ TS <- new(Class = "DTSg", values = flow, ID = "River Flow")
 
 ## Object Inspection
 
-Printing the object shows us the data provided, the specified ID, some more slots for metadata, which we left empty, as well as that the object represents a regular UTC time series with a periodicity of one day. It also shows us that the first column has been renamed to *.dateTime.* This columns serves as its time index and cannot be changed at will:
+Printing the object shows us the data provided, the specified ID and other metadata (if provided) as well as that the object represents a regular UTC time series with a periodicity of one day and 2192 timestamps. It also shows us that the first column has been renamed to *.dateTime.* This columns serves as its time index and cannot be changed at will:
 
 ```{r}
 TS$print() # or 'print(TS)' or just 'TS'
 ```
 
-With this done, we can move on and further explore our time series with a summary (`summary`), a report on missing values (`nas`) and a plot (`plot`). It suddenly seems to contain several missing values which apparently were not there upon loading the data set (`plot` requires the `xts`, `dygraphs` and `RColorBrewer` packages to be installed; HTML vignettes unfortunately cannot display interactive elements, hence I included a static image of the JavaScript chart instead):
+With this done, we can move on and further explore our time series with a summary (`summary`), a report on missing values (`nas`) and a plot (`plot`). It suddenly seems to contain several missing values which apparently were not there upon loading the data set (`plot` requires the `dygraphs` and `RColorBrewer` packages to be installed; HTML vignettes unfortunately cannot display interactive elements, hence I included a static image of the JavaScript chart instead):
 
 ```{r}
 TS$summary() # or 'summary(TS)'
 TS$nas(cols = "flow") # or 'nas(TS, cols = "flow")'
-if (requireNamespace("xts", quietly = TRUE) &&
-    requireNamespace("dygraphs", quietly = TRUE) &&
+if (requireNamespace("dygraphs", quietly = TRUE) &&
     requireNamespace("RColorBrewer", quietly = TRUE)) {
   TS$plot(cols = "flow") # or 'plot(TS, cols = "flow")'
 }
@@ -131,7 +130,7 @@ TSs
 
 On a sidenote, some of the methods which take a function as an argument (`colapply` and `rollapply`) hand over to it an additional `list` argument called `.helpers` containing useful data for the development of user defined functions (please see the respective help pages for further information). This can of course be a problem for functions like `sum` which do not expect such a thing. A solution is to wrap it in an anonymous function with a `...` parameter like this: `function(x, ...) sum(x)`.
 
-With this said, let's join the result of the last calculation to the original time series and extract the values as a `data.table` for further processing in a final step (please note that the *.dateTime* column gets its original name back):
+With this said, let's join the result of the last calculation to the original time series and extract its *values* as a `data.table` for further processing in a final step (please note that the *.dateTime* column gets its original name back):
 
 ```{r}
 TS  <- TS$merge(y = TSs, suffixes = c("_orig", "_movavg"))
@@ -155,6 +154,7 @@ Valid results are returned for the following fields:
 * *parameter*
 * *periodicity*
 * *regular*
+* *timestamps*
 * *timezone*
 * *unit*
 * *variant*

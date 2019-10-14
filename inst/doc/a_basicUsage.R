@@ -26,8 +26,7 @@ TS$print() # or 'print(TS)' or just 'TS'
 ## ------------------------------------------------------------------------
 TS$summary() # or 'summary(TS)'
 TS$nas(cols = "flow") # or 'nas(TS, cols = "flow")'
-if (requireNamespace("xts", quietly = TRUE) &&
-    requireNamespace("dygraphs", quietly = TRUE) &&
+if (requireNamespace("dygraphs", quietly = TRUE) &&
     requireNamespace("RColorBrewer", quietly = TRUE)) {
   TS$plot(cols = "flow") # or 'plot(TS, cols = "flow")'
 }

@@ -189,6 +189,20 @@ test_that(
 )
 
 test_that(
+  '"aggregated" field is set correctly',
+  expect_true(
+    DTSg$new(DT1, aggregated = TRUE)$aggregated
+  )
+)
+
+test_that(
+  '"fast" field is set correctly',
+  expect_true(
+    DTSg$new(DT1, fast = TRUE)$fast
+  )
+)
+
+test_that(
   '"ID" field is set correctly',
   expect_identical(
     DTSg$new(DT1, ID = "ID")$ID,
@@ -221,16 +235,15 @@ test_that(
 )
 
 test_that(
-  '"aggregated" field is set correctly',
+  "all/only global references are removed (data.table)",
   expect_true(
-    DTSg$new(DT1, aggregated = TRUE)$aggregated
-  )
-)
-
-test_that(
-  '"fast" field is set correctly',
-  expect_true(
-    DTSg$new(DT1, fast = TRUE)$fast
+    {
+      DTcopy <<- data.table::copy(flow)
+      DTref1 <<- flow
+      DTref2 <<- flow
+      DTSg$new(DTref1, swallow = TRUE)
+      exists("DTcopy", where = 1L) && !exists("DTref1", where = 1L) && !exists("DTref2", where = 1L)
+    }
   )
 )
 
@@ -280,7 +293,7 @@ test_that(
 test_that(
   "no missing values return empty data.table",
   expect_identical(
-    DTSg$new(DT2)$nas(cols = "col3"),
+    DTSg$new(DT2)$nas("col3"),
     data.table::data.table(
       .col = character(),
       .group = integer(),
@@ -295,16 +308,16 @@ test_that(
 context("refresh method")
 
 test_that(
-  "coercing .dateTime column returns warning",
-  expect_warning(
-    DTSg$new(data.table::data.table(date = as.character(DT2[["date"]]), col1 = DT2[["col1"]]))
+  "failing to coerce .dateTime column returns error",
+  expect_error(
+    DTSg$new(data.table::data.table(date = "timestamp", col1 = DT2[["col1"]]))
   )
 )
 
 test_that(
-  "failing to coerce .dateTime column returns error",
-  expect_error(
-    DTSg$new(data.table::data.table(date = "timestamp", col1 = DT2[["col1"]]))
+  "coercing .dateTime column returns warning",
+  expect_warning(
+    DTSg$new(data.table::data.table(date = as.character(DT2[["date"]]), col1 = DT2[["col1"]]))
   )
 )
 
@@ -390,6 +403,14 @@ test_that(
 )
 
 test_that(
+  '"timestamps" field is set correctly',
+  expect_identical(
+    DTSg$new(DT1)$timestamps,
+    8L
+  )
+)
+
+test_that(
   '"timezone" field is set correctly',
   expect_identical(
     DTSg$new(DT1)$timezone,
@@ -408,6 +429,13 @@ test_that(
   '"regular" field is read-only',
   expect_error(
     DTSg$new(DT1)$regular <- FALSE
+  )
+)
+
+test_that(
+  '"timestamps" field is read-only',
+  expect_error(
+    DTSg$new(DT1)$timestamps <- 1L
   )
 )
 
@@ -446,7 +474,7 @@ test_that(
 )
 
 test_that(
-  '"inverseDistance" weights are correct (power is one)',
+  '"inverseDistance" weights are correct (power = one)',
   expect_identical(
     DTSg$new(DT1)$rollapply(
       weighted.mean,
@@ -463,7 +491,7 @@ test_that(
 )
 
 test_that(
-  '"inverseDistance" weights are correct (power is two)',
+  '"inverseDistance" weights are correct (power = two)',
   expect_identical(
     DTSg$new(DT1)$rollapply(
       weighted.mean,
@@ -527,10 +555,16 @@ test_that(
 )
 
 test_that(
-  "name of .dateTime column is not restored",
-  expect_identical(
-    names(DTSg$new(DT1)$values(TRUE))[1L],
-    ".dateTime"
+  "all/only global references are removed (DTSg)",
+  expect_true(
+    {
+      TS <- DTSg$new(flow)
+      TScopy <<- TS$clone(deep = TRUE)
+      TSref1 <<- TS
+      TSref2 <<- TS
+      TS$values(TRUE, TRUE)
+      exists("TScopy", where = 1L) && !exists("TSref1", where = 1L) && !exists("TSref2", where = 1L)
+    }
   )
 )
 
@@ -539,5 +573,61 @@ test_that(
   expect_identical(
     names(DTSg$new(DT1)$values())[1L],
     "date"
+  )
+)
+
+test_that(
+  "name of .dateTime column is restored (drop)",
+  expect_identical(
+    names(DTSg$new(DT1)$values(FALSE, TRUE))[1L],
+    "date"
+  )
+)
+
+test_that(
+  "name of .dateTime column is not restored",
+  expect_identical(
+    names(DTSg$new(DT1)$values(TRUE))[1L],
+    ".dateTime"
+  )
+)
+
+test_that(
+  "class is data.table",
+  expect_identical(
+    class(DTSg$new(DT1)$values()),
+    c("data.table", "data.frame")
+  )
+)
+
+test_that(
+  "class is data.table (reference)",
+  expect_identical(
+    class(DTSg$new(DT1)$values(TRUE, FALSE, "data.frame")),
+    c("data.table", "data.frame")
+  )
+)
+
+test_that(
+  "class is data.table (drop)",
+  expect_identical(
+    class(DTSg$new(DT1)$values(FALSE, TRUE)),
+    c("data.table", "data.frame")
+  )
+)
+
+test_that(
+  "class is data.frame",
+  expect_identical(
+    class(DTSg$new(DT1)$values(FALSE, FALSE, "data.frame")),
+    "data.frame"
+  )
+)
+
+test_that(
+  "class is data.frame (drop)",
+  expect_identical(
+    class(DTSg$new(DT1)$values(FALSE, TRUE, "data.frame")),
+    "data.frame"
   )
 )

@@ -13,7 +13,7 @@
 
 <meta name="author" content="Gerold Hepp" />
 
-<meta name="date" content="2019-08-28" />
+<meta name="date" content="2019-10-14" />
 
 <title>B. Advanced Usage</title>
 
@@ -304,11 +304,11 @@ code > span.fu { color: #900; font-weight: bold; }  code > span.er { color: #a61
 
 <h1 class="title toc-ignore">B. Advanced Usage</h1>
 <h4 class="author">Gerold Hepp</h4>
-<h4 class="date">2019-08-28</h4>
+<h4 class="date">2019-10-14</h4>
 
 
 
-<p>This vignette illustrates some more advanced concepts of the <code>DTSg</code> package, namely reference semantics as well as chaining and piping.</p>
+<p>This vignette illustrates some more advanced concepts of the <code>DTSg</code> package, namely reference semantics, chaining and piping as well as swallowing and dropping.</p>
 <hr />
 <p>First, let’s load the package as well as some data and let’s create a <code>DTSg</code> object:</p>
 <div class="sourceCode" id="cb1"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb1-1" title="1"><span class="kw">library</span>(DTSg)</a>
@@ -331,17 +331,14 @@ code > span.fu { color: #900; font-weight: bold; }  code > span.er { color: #a61
 <a class="sourceLine" id="cb1-18" title="18"><span class="co">#&gt; 2191: 2012-12-30 18.840</span></a>
 <a class="sourceLine" id="cb1-19" title="19"><span class="co">#&gt; 2192: 2012-12-31 17.250</span></a>
 <a class="sourceLine" id="cb1-20" title="20"><span class="co">#&gt; </span></a>
-<a class="sourceLine" id="cb1-21" title="21"><span class="co">#&gt; ID:          </span></a>
-<a class="sourceLine" id="cb1-22" title="22"><span class="co">#&gt; Parameter:   </span></a>
-<a class="sourceLine" id="cb1-23" title="23"><span class="co">#&gt; Variant:     </span></a>
-<a class="sourceLine" id="cb1-24" title="24"><span class="co">#&gt; Unit:        </span></a>
-<a class="sourceLine" id="cb1-25" title="25"><span class="co">#&gt; Aggregated:  FALSE</span></a>
-<a class="sourceLine" id="cb1-26" title="26"><span class="co">#&gt; Regular:     TRUE</span></a>
-<a class="sourceLine" id="cb1-27" title="27"><span class="co">#&gt; Periodicity: Time difference of 1 days</span></a>
-<a class="sourceLine" id="cb1-28" title="28"><span class="co">#&gt; Time zone:   UTC</span></a></code></pre></div>
+<a class="sourceLine" id="cb1-21" title="21"><span class="co">#&gt; Aggregated:  FALSE</span></a>
+<a class="sourceLine" id="cb1-22" title="22"><span class="co">#&gt; Regular:     TRUE</span></a>
+<a class="sourceLine" id="cb1-23" title="23"><span class="co">#&gt; Periodicity: Time difference of 1 days</span></a>
+<a class="sourceLine" id="cb1-24" title="24"><span class="co">#&gt; Time zone:   UTC</span></a>
+<a class="sourceLine" id="cb1-25" title="25"><span class="co">#&gt; Timestamps:  2192</span></a></code></pre></div>
 <div id="reference-semantics" class="section level2">
 <h2>Reference Semantics</h2>
-<p>By default, every method manipulating the values of a <code>DTSg</code> object creates a copy of it. This behaviour can be overridden by setting their <code>clone</code> argument to <code>FALSE</code>. Globally, cloning can be controlled with the help of the <em>DTSgClone</em> option:</p>
+<p>By default, every method manipulating the <em>values</em> of a <code>DTSg</code> object creates a copy of it. This behaviour can be overridden by setting their <code>clone</code> argument to <code>FALSE</code>. Globally, cloning can be controlled with the help of the <em>DTSgClone</em> option:</p>
 <div class="sourceCode" id="cb2"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb2-1" title="1">TS<span class="op">$</span><span class="kw">alter</span>(<span class="st">&quot;2007-01-01&quot;</span>, <span class="st">&quot;2008-12-31&quot;</span>)</a>
 <a class="sourceLine" id="cb2-2" title="2"><span class="co"># end date is still in the year 2012</span></a>
 <a class="sourceLine" id="cb2-3" title="3">TS</a>
@@ -360,44 +357,38 @@ code > span.fu { color: #900; font-weight: bold; }  code > span.er { color: #a61
 <a class="sourceLine" id="cb2-16" title="16"><span class="co">#&gt; 2191: 2012-12-30 18.840</span></a>
 <a class="sourceLine" id="cb2-17" title="17"><span class="co">#&gt; 2192: 2012-12-31 17.250</span></a>
 <a class="sourceLine" id="cb2-18" title="18"><span class="co">#&gt; </span></a>
-<a class="sourceLine" id="cb2-19" title="19"><span class="co">#&gt; ID:          </span></a>
-<a class="sourceLine" id="cb2-20" title="20"><span class="co">#&gt; Parameter:   </span></a>
-<a class="sourceLine" id="cb2-21" title="21"><span class="co">#&gt; Variant:     </span></a>
-<a class="sourceLine" id="cb2-22" title="22"><span class="co">#&gt; Unit:        </span></a>
-<a class="sourceLine" id="cb2-23" title="23"><span class="co">#&gt; Aggregated:  FALSE</span></a>
-<a class="sourceLine" id="cb2-24" title="24"><span class="co">#&gt; Regular:     TRUE</span></a>
-<a class="sourceLine" id="cb2-25" title="25"><span class="co">#&gt; Periodicity: Time difference of 1 days</span></a>
-<a class="sourceLine" id="cb2-26" title="26"><span class="co">#&gt; Time zone:   UTC</span></a>
-<a class="sourceLine" id="cb2-27" title="27"></a>
-<a class="sourceLine" id="cb2-28" title="28"><span class="kw">options</span>(<span class="st">&quot;DTSgClone&quot;</span> =<span class="st"> </span><span class="ot">FALSE</span>)</a>
-<a class="sourceLine" id="cb2-29" title="29"><span class="kw">getOption</span>(<span class="st">&quot;DTSgClone&quot;</span>)</a>
-<a class="sourceLine" id="cb2-30" title="30"><span class="co">#&gt; [1] FALSE</span></a>
-<a class="sourceLine" id="cb2-31" title="31">TS<span class="op">$</span><span class="kw">alter</span>(<span class="st">&quot;2007-01-01&quot;</span>, <span class="st">&quot;2008-12-31&quot;</span>)</a>
-<a class="sourceLine" id="cb2-32" title="32"><span class="co"># end date is in the year 2008 now</span></a>
-<a class="sourceLine" id="cb2-33" title="33">TS</a>
-<a class="sourceLine" id="cb2-34" title="34"><span class="co">#&gt; Values:</span></a>
-<a class="sourceLine" id="cb2-35" title="35"><span class="co">#&gt;       .dateTime   flow</span></a>
-<a class="sourceLine" id="cb2-36" title="36"><span class="co">#&gt;          &lt;POSc&gt;  &lt;num&gt;</span></a>
-<a class="sourceLine" id="cb2-37" title="37"><span class="co">#&gt;   1: 2007-01-01  9.540</span></a>
-<a class="sourceLine" id="cb2-38" title="38"><span class="co">#&gt;   2: 2007-01-02  9.285</span></a>
-<a class="sourceLine" id="cb2-39" title="39"><span class="co">#&gt;   3: 2007-01-03  8.940</span></a>
-<a class="sourceLine" id="cb2-40" title="40"><span class="co">#&gt;   4: 2007-01-04  8.745</span></a>
-<a class="sourceLine" id="cb2-41" title="41"><span class="co">#&gt;   5: 2007-01-05  8.490</span></a>
-<a class="sourceLine" id="cb2-42" title="42"><span class="co">#&gt;  ---                  </span></a>
-<a class="sourceLine" id="cb2-43" title="43"><span class="co">#&gt; 727: 2008-12-27 18.180</span></a>
-<a class="sourceLine" id="cb2-44" title="44"><span class="co">#&gt; 728: 2008-12-28 16.575</span></a>
-<a class="sourceLine" id="cb2-45" title="45"><span class="co">#&gt; 729: 2008-12-29 13.695</span></a>
-<a class="sourceLine" id="cb2-46" title="46"><span class="co">#&gt; 730: 2008-12-30 12.540</span></a>
-<a class="sourceLine" id="cb2-47" title="47"><span class="co">#&gt; 731: 2008-12-31 11.940</span></a>
-<a class="sourceLine" id="cb2-48" title="48"><span class="co">#&gt; </span></a>
-<a class="sourceLine" id="cb2-49" title="49"><span class="co">#&gt; ID:          </span></a>
-<a class="sourceLine" id="cb2-50" title="50"><span class="co">#&gt; Parameter:   </span></a>
-<a class="sourceLine" id="cb2-51" title="51"><span class="co">#&gt; Variant:     </span></a>
-<a class="sourceLine" id="cb2-52" title="52"><span class="co">#&gt; Unit:        </span></a>
-<a class="sourceLine" id="cb2-53" title="53"><span class="co">#&gt; Aggregated:  FALSE</span></a>
-<a class="sourceLine" id="cb2-54" title="54"><span class="co">#&gt; Regular:     TRUE</span></a>
-<a class="sourceLine" id="cb2-55" title="55"><span class="co">#&gt; Periodicity: Time difference of 1 days</span></a>
-<a class="sourceLine" id="cb2-56" title="56"><span class="co">#&gt; Time zone:   UTC</span></a></code></pre></div>
+<a class="sourceLine" id="cb2-19" title="19"><span class="co">#&gt; Aggregated:  FALSE</span></a>
+<a class="sourceLine" id="cb2-20" title="20"><span class="co">#&gt; Regular:     TRUE</span></a>
+<a class="sourceLine" id="cb2-21" title="21"><span class="co">#&gt; Periodicity: Time difference of 1 days</span></a>
+<a class="sourceLine" id="cb2-22" title="22"><span class="co">#&gt; Time zone:   UTC</span></a>
+<a class="sourceLine" id="cb2-23" title="23"><span class="co">#&gt; Timestamps:  2192</span></a>
+<a class="sourceLine" id="cb2-24" title="24"></a>
+<a class="sourceLine" id="cb2-25" title="25"><span class="kw">options</span>(<span class="st">&quot;DTSgClone&quot;</span> =<span class="st"> </span><span class="ot">FALSE</span>)</a>
+<a class="sourceLine" id="cb2-26" title="26"><span class="kw">getOption</span>(<span class="st">&quot;DTSgClone&quot;</span>)</a>
+<a class="sourceLine" id="cb2-27" title="27"><span class="co">#&gt; [1] FALSE</span></a>
+<a class="sourceLine" id="cb2-28" title="28">TS<span class="op">$</span><span class="kw">alter</span>(<span class="st">&quot;2007-01-01&quot;</span>, <span class="st">&quot;2008-12-31&quot;</span>)</a>
+<a class="sourceLine" id="cb2-29" title="29"><span class="co"># end date is in the year 2008 now</span></a>
+<a class="sourceLine" id="cb2-30" title="30">TS</a>
+<a class="sourceLine" id="cb2-31" title="31"><span class="co">#&gt; Values:</span></a>
+<a class="sourceLine" id="cb2-32" title="32"><span class="co">#&gt;       .dateTime   flow</span></a>
+<a class="sourceLine" id="cb2-33" title="33"><span class="co">#&gt;          &lt;POSc&gt;  &lt;num&gt;</span></a>
+<a class="sourceLine" id="cb2-34" title="34"><span class="co">#&gt;   1: 2007-01-01  9.540</span></a>
+<a class="sourceLine" id="cb2-35" title="35"><span class="co">#&gt;   2: 2007-01-02  9.285</span></a>
+<a class="sourceLine" id="cb2-36" title="36"><span class="co">#&gt;   3: 2007-01-03  8.940</span></a>
+<a class="sourceLine" id="cb2-37" title="37"><span class="co">#&gt;   4: 2007-01-04  8.745</span></a>
+<a class="sourceLine" id="cb2-38" title="38"><span class="co">#&gt;   5: 2007-01-05  8.490</span></a>
+<a class="sourceLine" id="cb2-39" title="39"><span class="co">#&gt;  ---                  </span></a>
+<a class="sourceLine" id="cb2-40" title="40"><span class="co">#&gt; 727: 2008-12-27 18.180</span></a>
+<a class="sourceLine" id="cb2-41" title="41"><span class="co">#&gt; 728: 2008-12-28 16.575</span></a>
+<a class="sourceLine" id="cb2-42" title="42"><span class="co">#&gt; 729: 2008-12-29 13.695</span></a>
+<a class="sourceLine" id="cb2-43" title="43"><span class="co">#&gt; 730: 2008-12-30 12.540</span></a>
+<a class="sourceLine" id="cb2-44" title="44"><span class="co">#&gt; 731: 2008-12-31 11.940</span></a>
+<a class="sourceLine" id="cb2-45" title="45"><span class="co">#&gt; </span></a>
+<a class="sourceLine" id="cb2-46" title="46"><span class="co">#&gt; Aggregated:  FALSE</span></a>
+<a class="sourceLine" id="cb2-47" title="47"><span class="co">#&gt; Regular:     TRUE</span></a>
+<a class="sourceLine" id="cb2-48" title="48"><span class="co">#&gt; Periodicity: Time difference of 1 days</span></a>
+<a class="sourceLine" id="cb2-49" title="49"><span class="co">#&gt; Time zone:   UTC</span></a>
+<a class="sourceLine" id="cb2-50" title="50"><span class="co">#&gt; Timestamps:  731</span></a></code></pre></div>
 <p>As we can see, with cloning set to <code>FALSE</code>, the object was altered in place, i.e., no assignment to a new or reassignment to an existing variable was necessary in order to make the changes stick. This is due to the R6 nature of <code>DTSg</code> objects.</p>
 <div id="note" class="section level3">
 <h3>Note</h3>
@@ -445,16 +436,13 @@ code > span.fu { color: #900; font-weight: bold; }  code > span.er { color: #a61
 <a class="sourceLine" id="cb4-33" title="33"><span class="co">#&gt; 24: 2008-12-01 16.435645</span></a>
 <a class="sourceLine" id="cb4-34" title="34"><span class="co">#&gt;      .dateTime      flow</span></a>
 <a class="sourceLine" id="cb4-35" title="35"><span class="co">#&gt; </span></a>
-<a class="sourceLine" id="cb4-36" title="36"><span class="co">#&gt; ID:          </span></a>
-<a class="sourceLine" id="cb4-37" title="37"><span class="co">#&gt; Parameter:   </span></a>
-<a class="sourceLine" id="cb4-38" title="38"><span class="co">#&gt; Variant:     </span></a>
-<a class="sourceLine" id="cb4-39" title="39"><span class="co">#&gt; Unit:        </span></a>
-<a class="sourceLine" id="cb4-40" title="40"><span class="co">#&gt; Aggregated:  TRUE</span></a>
-<a class="sourceLine" id="cb4-41" title="41"><span class="co">#&gt; Regular:     FALSE</span></a>
-<a class="sourceLine" id="cb4-42" title="42"><span class="co">#&gt; Periodicity: 1 months</span></a>
-<a class="sourceLine" id="cb4-43" title="43"><span class="co">#&gt; Min lag:     Time difference of 28 days</span></a>
-<a class="sourceLine" id="cb4-44" title="44"><span class="co">#&gt; Max lag:     Time difference of 31 days</span></a>
-<a class="sourceLine" id="cb4-45" title="45"><span class="co">#&gt; Time zone:   UTC</span></a></code></pre></div>
+<a class="sourceLine" id="cb4-36" title="36"><span class="co">#&gt; Aggregated:  TRUE</span></a>
+<a class="sourceLine" id="cb4-37" title="37"><span class="co">#&gt; Regular:     FALSE</span></a>
+<a class="sourceLine" id="cb4-38" title="38"><span class="co">#&gt; Periodicity: 1 months</span></a>
+<a class="sourceLine" id="cb4-39" title="39"><span class="co">#&gt; Min lag:     Time difference of 28 days</span></a>
+<a class="sourceLine" id="cb4-40" title="40"><span class="co">#&gt; Max lag:     Time difference of 31 days</span></a>
+<a class="sourceLine" id="cb4-41" title="41"><span class="co">#&gt; Time zone:   UTC</span></a>
+<a class="sourceLine" id="cb4-42" title="42"><span class="co">#&gt; Timestamps:  24</span></a></code></pre></div>
 <p>For piping, we have to make sure the <code>magrittr</code> package is installed and load it for access to its forward-pipe operator first:</p>
 <div class="sourceCode" id="cb5"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb5-1" title="1"><span class="cf">if</span> (<span class="kw">requireNamespace</span>(<span class="st">&quot;magrittr&quot;</span>, <span class="dt">quietly =</span> <span class="ot">TRUE</span>)) {</a>
 <a class="sourceLine" id="cb5-2" title="2">  <span class="kw">library</span>(magrittr)</a>
@@ -494,16 +482,35 @@ code > span.fu { color: #900; font-weight: bold; }  code > span.er { color: #a61
 <a class="sourceLine" id="cb5-36" title="36"><span class="co">#&gt; 24: 2008-12-01 16.435645</span></a>
 <a class="sourceLine" id="cb5-37" title="37"><span class="co">#&gt;      .dateTime      flow</span></a>
 <a class="sourceLine" id="cb5-38" title="38"><span class="co">#&gt; </span></a>
-<a class="sourceLine" id="cb5-39" title="39"><span class="co">#&gt; ID:          </span></a>
-<a class="sourceLine" id="cb5-40" title="40"><span class="co">#&gt; Parameter:   </span></a>
-<a class="sourceLine" id="cb5-41" title="41"><span class="co">#&gt; Variant:     </span></a>
-<a class="sourceLine" id="cb5-42" title="42"><span class="co">#&gt; Unit:        </span></a>
-<a class="sourceLine" id="cb5-43" title="43"><span class="co">#&gt; Aggregated:  TRUE</span></a>
-<a class="sourceLine" id="cb5-44" title="44"><span class="co">#&gt; Regular:     FALSE</span></a>
-<a class="sourceLine" id="cb5-45" title="45"><span class="co">#&gt; Periodicity: 1 months</span></a>
-<a class="sourceLine" id="cb5-46" title="46"><span class="co">#&gt; Min lag:     Time difference of 28 days</span></a>
-<a class="sourceLine" id="cb5-47" title="47"><span class="co">#&gt; Max lag:     Time difference of 31 days</span></a>
-<a class="sourceLine" id="cb5-48" title="48"><span class="co">#&gt; Time zone:   UTC</span></a></code></pre></div>
+<a class="sourceLine" id="cb5-39" title="39"><span class="co">#&gt; Aggregated:  TRUE</span></a>
+<a class="sourceLine" id="cb5-40" title="40"><span class="co">#&gt; Regular:     FALSE</span></a>
+<a class="sourceLine" id="cb5-41" title="41"><span class="co">#&gt; Periodicity: 1 months</span></a>
+<a class="sourceLine" id="cb5-42" title="42"><span class="co">#&gt; Min lag:     Time difference of 28 days</span></a>
+<a class="sourceLine" id="cb5-43" title="43"><span class="co">#&gt; Max lag:     Time difference of 31 days</span></a>
+<a class="sourceLine" id="cb5-44" title="44"><span class="co">#&gt; Time zone:   UTC</span></a>
+<a class="sourceLine" id="cb5-45" title="45"><span class="co">#&gt; Timestamps:  24</span></a></code></pre></div>
+</div>
+<div id="swallowing-and-dropping" class="section level2">
+<h2>Swallowing and Dropping</h2>
+<p>An extension to reference semantics of existing <code>DTSg</code> objects is reference semantics during object creation. This behaviour can be triggered with the help of the <code>swallow</code> argument of the <code>new</code> method. If set to <code>TRUE</code>, a <code>data.table</code> provided through the <code>values</code> argument is “swallowed” by the <code>DTSg</code> object, i.e., no copy of it is made and all references to it are removed from the global environment upon successful object creation:</p>
+<div class="sourceCode" id="cb6"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb6-1" title="1"><span class="kw">library</span>(data.table)</a>
+<a class="sourceLine" id="cb6-2" title="2"></a>
+<a class="sourceLine" id="cb6-3" title="3">DT &lt;-<span class="st"> </span><span class="kw">copy</span>(flow)</a>
+<a class="sourceLine" id="cb6-4" title="4"><span class="kw">ls</span>(<span class="dt">pattern =</span> <span class="st">&quot;DT&quot;</span>)</a>
+<a class="sourceLine" id="cb6-5" title="5"><span class="co">#&gt; [1] &quot;DT&quot;</span></a>
+<a class="sourceLine" id="cb6-6" title="6">TS &lt;-<span class="st"> </span>DTSg<span class="op">$</span><span class="kw">new</span>(DT, <span class="dt">swallow =</span> <span class="ot">TRUE</span>)</a>
+<a class="sourceLine" id="cb6-7" title="7"><span class="kw">ls</span>(<span class="dt">pattern =</span> <span class="st">&quot;DT&quot;</span>)</a>
+<a class="sourceLine" id="cb6-8" title="8"><span class="co">#&gt; character(0)</span></a></code></pre></div>
+<p>The opposite of swallowing is called dropping. This term refers to querying the <em>values</em> of a <code>DTSg</code> object as a reference while removing all references to the original <code>DTSg</code> object from the global environment at the same time:</p>
+<div class="sourceCode" id="cb7"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb7-1" title="1">TS &lt;-<span class="st"> </span>DTSg<span class="op">$</span><span class="kw">new</span>(flow)</a>
+<a class="sourceLine" id="cb7-2" title="2"><span class="kw">ls</span>(<span class="dt">pattern =</span> <span class="st">&quot;TS&quot;</span>)</a>
+<a class="sourceLine" id="cb7-3" title="3"><span class="co">#&gt; [1] &quot;TS&quot;         &quot;TSQ&quot;        &quot;TSassigned&quot; &quot;TSc&quot;        &quot;TScloned&quot;  </span></a>
+<a class="sourceLine" id="cb7-4" title="4"><span class="co">#&gt; [6] &quot;TSm&quot;        &quot;TSs&quot;</span></a>
+<a class="sourceLine" id="cb7-5" title="5">DT &lt;-<span class="st"> </span>TS<span class="op">$</span><span class="kw">values</span>(<span class="dt">drop =</span> <span class="ot">TRUE</span>)</a>
+<a class="sourceLine" id="cb7-6" title="6"><span class="kw">ls</span>(<span class="dt">pattern =</span> <span class="st">&quot;TS&quot;</span>)</a>
+<a class="sourceLine" id="cb7-7" title="7"><span class="co">#&gt; [1] &quot;TSQ&quot;        &quot;TSassigned&quot; &quot;TSc&quot;        &quot;TScloned&quot;   &quot;TSm&quot;       </span></a>
+<a class="sourceLine" id="cb7-8" title="8"><span class="co">#&gt; [6] &quot;TSs&quot;</span></a></code></pre></div>
+<p>Please refer to the help pages for further details.</p>
 </div>
 
 

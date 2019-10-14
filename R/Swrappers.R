@@ -4,10 +4,10 @@ NULL
 #' Aggregate Values
 #'
 #' Applies a temporal aggregation level function to the \emph{.dateTime} column
-#'  of a \code{\link{DTSg}} object and aggregates its values columnwise to the
-#'  function's temporal aggregation level utilising a provided summary function.
-#'  Additionally, it sets the object's \emph{aggregated} field to \code{TRUE}.
-#'  See \code{\link{DTSg}} for further information.
+#'  of a \code{\link{DTSg}} object and aggregates its \emph{values} columnwise
+#'  to the function's temporal aggregation level utilising a provided summary
+#'  function. Additionally, it sets the object's \emph{aggregated} field to
+#'  \code{TRUE}. See \code{\link{DTSg}} for further information.
 #'
 #' @param x A \code{\link{DTSg}} object (S3 method only).
 #' @param funby One of the temporal aggregation level functions described in
@@ -244,8 +244,9 @@ cols <- function(x, ...) {
 #'  \code{\link{class}} only.
 #'
 #' @param x A \code{\link{DTSg}} object (S3 method only).
-#' @param class A character string matched to the first element of each column's
-#'  \code{\link{class}} vector or \code{"all"} for all column names.
+#' @param class A character string matched to the most specific class (first
+#'  element) of each column's \code{\link{class}} vector or \code{"all"} for all
+#'  column names.
 #' @param \dots Not used (S3 method only).
 #'
 #' @return Returns a character vector.
@@ -357,7 +358,8 @@ new <- function(
   unit = "",
   variant = "",
   aggregated = FALSE,
-  fast = FALSE
+  fast = FALSE,
+  swallow = FALSE
 ) {
   DTSg$new(
     values = values,
@@ -366,7 +368,8 @@ new <- function(
     unit = unit,
     variant = variant,
     aggregated = aggregated,
-    fast = fast
+    fast = fast,
+    swallow = swallow
   )
 } # no R CMD check warning
 setClass("DTSg", slots = c(. = "logical"))
@@ -382,11 +385,11 @@ setMethod(
 #' Plot Time Series
 #'
 #' Displays an interactive plot of a \code{\link{DTSg}} object. This method
-#'  requires \pkg{xts}, \pkg{dygraphs} and \pkg{RColorBrewer} to be installed.
-#'  Its main purpose is not to make pretty plots, but rather to offer a
-#'  possibility to interactively explore time series. The title of the plot and
-#'  the label of its primary axis is automatically generated out of the object's
-#'  metadata (fields). See \code{\link{DTSg}} for further information.
+#'  requires \pkg{dygraphs} and \pkg{RColorBrewer} to be installed. Its main
+#'  purpose is not to make pretty plots, but rather to offer a possibility to
+#'  interactively explore time series. The title of the plot and the label of
+#'  its primary axis are automatically generated out of the object's metadata
+#'  (fields). See \code{\link{DTSg}} for further information.
 #'
 #' @param x A \code{\link{DTSg}} object (S3 method only).
 #' @param from A \code{\link{POSIXct}} date with the same time zone as the time
@@ -413,8 +416,7 @@ setMethod(
 #' x <- DTSg$new(values = flow)
 #'
 #' # plot time series
-#' if (requireNamespace("xts", quietly = TRUE) &&
-#'     requireNamespace("dygraphs", quietly = TRUE) &&
+#' if (requireNamespace("dygraphs", quietly = TRUE) &&
 #'     requireNamespace("RColorBrewer", quietly = TRUE)) {
 #'   ## R6 method
 #'   x$plot()
@@ -578,25 +580,32 @@ values <- function(x, ...) {
 #' @param reference A logical specifying if a copy of the \emph{values} or a
 #'  reference to the \emph{values} is returned. See details for further
 #'  information.
+#' @param drop A logical specifying if the object and all references to it shall
+#'  be removed from the global environment after successfully querying its
+#'  values. This feature allows for a ressource efficient destruction of a
+#'  \code{\link{DTSg}} object while preserving its \emph{values.}
+#' @param class A character string specifying the class of the returned
+#'  \emph{values.} \code{"data.frame"} only works if either a copy of the
+#'  \emph{values} is returned or the object is dropped.
 #' @param \dots Not used (S3 method only).
 #'
 #' @details
 #' A reference to the \emph{values} of a \code{\link{DTSg}} object can be used
 #'  to modify them in place. This includes the \emph{.dateTime} column, which
 #'  serves as the object's time index. Modifying this column can therefore
-#'  endanger its integrity. In case needs to do so ever arise,
+#'  endanger the object's integrity. In case needs to do so ever arise,
 #'  \code{\link{refresh}} should be called immediately afterwards in order to
 #'  check the object's integrity.
 #'
-#' @return Returns a \code{\link[data.table]{data.table}} or a reference to a
-#'  \code{\link[data.table]{data.table}}.
+#' @return Returns a \code{\link[data.table]{data.table}}, a reference to a
+#'  \code{\link[data.table]{data.table}} or a \code{\link{data.frame}}.
 #'
 #' @note
 #' The original name of the \emph{.dateTime} column is restored when not
-#'  returned as a reference.
+#'  returned as a reference or when dropped.
 #'
 #' @seealso \code{\link{DTSg}}, \code{\link{refresh}},
-#'  \code{\link[data.table]{data.table}}
+#'  \code{\link[data.table]{data.table}}, \code{\link{data.frame}}
 #'
 #' @examples
 #' # new DTSg object

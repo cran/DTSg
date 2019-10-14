@@ -47,3 +47,17 @@ if (requireNamespace("magrittr", quietly = TRUE)) {
   TS
 }
 
+## ------------------------------------------------------------------------
+library(data.table)
+
+DT <- copy(flow)
+ls(pattern = "DT")
+TS <- DTSg$new(DT, swallow = TRUE)
+ls(pattern = "DT")
+
+## ------------------------------------------------------------------------
+TS <- DTSg$new(flow)
+ls(pattern = "TS")
+DT <- TS$values(drop = TRUE)
+ls(pattern = "TS")
+
