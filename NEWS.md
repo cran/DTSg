@@ -1,4 +1,8 @@
-## DTSg v0.1.3.9000
+## DTSg v0.2.1
+
+* Fixed error "Unsupported type passed to argument 'data'." related to `dygraphs` in at least some previous releases of R ≤ 3.5.3)
+
+## DTSg v0.2.0
 
 * Added `swallow` argument to `new` method: allows for a more ressource efficient object creation
 * Added `drop` argument to `values` method: allows for a ressource efficient destruction of a `DTSg` object while preserving its *values*

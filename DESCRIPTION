@@ -2,7 +2,7 @@ Package: DTSg
 Type: Package
 Title: A Class for Working with Time Series Based on 'data.table' and
         'R6' with Largely Optional Reference Semantics
-Version: 0.2.0
+Version: 0.2.1
 Authors@R: person("Gerold", "Hepp", email = "ghepp@iwag.tuwien.ac.at", role = c("aut", "cre"))
 Description: Basic time series functionalities such as listing of missing
     values, application of arbitrary aggregation as well as rolling window
@@ -25,8 +25,8 @@ Suggests: covr, dygraphs, fasttime, knitr, magrittr, RColorBrewer,
 RoxygenNote: 6.1.1
 VignetteBuilder: knitr
 NeedsCompilation: no
-Packaged: 2019-10-14 19:56:33 UTC; ghepp
+Packaged: 2019-10-19 14:20:00 UTC; ghepp
 Author: Gerold Hepp [aut, cre]
 Maintainer: Gerold Hepp <ghepp@iwag.tuwien.ac.at>
 Repository: CRAN
-Date/Publication: 2019-10-14 21:40:02 UTC
+Date/Publication: 2019-10-20 07:10:09 UTC

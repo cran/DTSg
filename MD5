@@ -1,8 +1,8 @@
-e364e3fda2af001706c1e62c9b5adfe7 *DESCRIPTION
+ae927af809c1884c84b719ad6386e403 *DESCRIPTION
 d967713f5e7573ec4ab108ed5116a418 *LICENSE
 35efdf3fd05bc7dcc24247223fd7d2e3 *NAMESPACE
-472423eda53118a434e87cb5f19db6a9 *NEWS.md
-3d30ab9a9917aabfc8b7447167c490ea *R/ClassDTSg.R
+c95f0157f134462a448ecdfa733a58dd *NEWS.md
+67bb02eb5899a5233d9c6ca09344a1b0 *R/ClassDTSg.R
 131fd5dfddfa50d55b4ed5bf7dd4c0d9 *R/S3WrapperGenerator.R
 7bfa110f886f618946899cc66e82fc1c *R/Swrappers.R
 252165e92e4b848545d1b6fec9f211a7 *R/aaa.R
@@ -17,10 +17,10 @@ affce2ba9f7e70c86e0c5cf3083e582f *build/vignette.rds
 3e2a543906975f7449aba53e7919d1a3 *data/flow.rda
 c31001c7c696f971ab4df9851b5b7463 *inst/doc/a_basicUsage.R
 72fbd1cc940d034a0286ddd39aae698b *inst/doc/a_basicUsage.Rmd
-de66e7ffcc3bc0376a0ffb3693da50d6 *inst/doc/a_basicUsage.html
+be0b4b29e9b2dffe0c05ab3433233485 *inst/doc/a_basicUsage.html
 1a2779954fb891ddc418488c546728db *inst/doc/b_advancedUsage.R
 9143d9c9806b539d0824290f84dd8998 *inst/doc/b_advancedUsage.Rmd
-4c64cbf6768181280c4787236307cb6f *inst/doc/b_advancedUsage.html
+d64e348d3549452d5079c620f53965c0 *inst/doc/b_advancedUsage.html
 bdf207b84df2bce14c924a8fa977f869 *man/DTSg.Rd
 884725ccc85c6f97fae8101ae7b781a6 *man/S3WrapperGenerator.Rd
 4403ca03c2e7af26c204ea0fe3e77cae *man/TALFs.Rd
