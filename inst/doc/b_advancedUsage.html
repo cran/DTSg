@@ -1,11 +1,10 @@
 <!DOCTYPE html>
 
-<html xmlns="http://www.w3.org/1999/xhtml">
+<html>
 
 <head>
 
 <meta charset="utf-8" />
-<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
 <meta name="generator" content="pandoc" />
 <meta http-equiv="X-UA-Compatible" content="IE=EDGE" />
 
@@ -13,7 +12,7 @@
 
 <meta name="author" content="Gerold Hepp" />
 
-<meta name="date" content="2019-10-19" />
+<meta name="date" content="2020-01-07" />
 
 <title>B. Advanced Usage</title>
 
@@ -304,7 +303,7 @@ code > span.fu { color: #900; font-weight: bold; }  code > span.er { color: #a61
 
 <h1 class="title toc-ignore">B. Advanced Usage</h1>
 <h4 class="author">Gerold Hepp</h4>
-<h4 class="date">2019-10-19</h4>
+<h4 class="date">2020-01-07</h4>
 
 
 
@@ -492,24 +491,22 @@ code > span.fu { color: #900; font-weight: bold; }  code > span.er { color: #a61
 </div>
 <div id="swallowing-and-dropping" class="section level2">
 <h2>Swallowing and Dropping</h2>
-<p>An extension to reference semantics of existing <code>DTSg</code> objects is reference semantics during object creation. This behaviour can be triggered with the help of the <code>swallow</code> argument of the <code>new</code> method. If set to <code>TRUE</code>, a <code>data.table</code> provided through the <code>values</code> argument is “swallowed” by the <code>DTSg</code> object, i.e., no copy of it is made and all references to it are removed from the global environment upon successful object creation:</p>
+<p>An extension to reference semantics of existing <code>DTSg</code> objects is reference semantics during object creation. This behaviour can be triggered with the help of the <code>swallow</code> argument of the <code>new</code> method. If set to <code>TRUE</code>, a <code>data.table</code> provided through the <code>values</code> argument is “swallowed” by the <code>DTSg</code> object, i.e., no copy of it is made and all references to it are removed from the global (and only the global) environment upon successful object creation:</p>
 <div class="sourceCode" id="cb6"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb6-1" title="1"><span class="kw">library</span>(data.table)</a>
 <a class="sourceLine" id="cb6-2" title="2"></a>
 <a class="sourceLine" id="cb6-3" title="3">DT &lt;-<span class="st"> </span><span class="kw">copy</span>(flow)</a>
-<a class="sourceLine" id="cb6-4" title="4"><span class="kw">ls</span>(<span class="dt">pattern =</span> <span class="st">&quot;DT&quot;</span>)</a>
+<a class="sourceLine" id="cb6-4" title="4"><span class="kw">ls</span>(<span class="dt">pattern =</span> <span class="st">&quot;^DT$&quot;</span>)</a>
 <a class="sourceLine" id="cb6-5" title="5"><span class="co">#&gt; [1] &quot;DT&quot;</span></a>
 <a class="sourceLine" id="cb6-6" title="6">TS &lt;-<span class="st"> </span>DTSg<span class="op">$</span><span class="kw">new</span>(DT, <span class="dt">swallow =</span> <span class="ot">TRUE</span>)</a>
-<a class="sourceLine" id="cb6-7" title="7"><span class="kw">ls</span>(<span class="dt">pattern =</span> <span class="st">&quot;DT&quot;</span>)</a>
+<a class="sourceLine" id="cb6-7" title="7"><span class="kw">ls</span>(<span class="dt">pattern =</span> <span class="st">&quot;^DT$&quot;</span>)</a>
 <a class="sourceLine" id="cb6-8" title="8"><span class="co">#&gt; character(0)</span></a></code></pre></div>
-<p>The opposite of swallowing is called dropping. This term refers to querying the <em>values</em> of a <code>DTSg</code> object as a reference while removing all references to the original <code>DTSg</code> object from the global environment at the same time:</p>
+<p>The opposite of swallowing is called dropping. This term refers to querying the <em>values</em> of a <code>DTSg</code> object as a reference while removing all references to the original <code>DTSg</code> object from the global (and again only the global) environment at the same time:</p>
 <div class="sourceCode" id="cb7"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb7-1" title="1">TS &lt;-<span class="st"> </span>DTSg<span class="op">$</span><span class="kw">new</span>(flow)</a>
-<a class="sourceLine" id="cb7-2" title="2"><span class="kw">ls</span>(<span class="dt">pattern =</span> <span class="st">&quot;TS&quot;</span>)</a>
-<a class="sourceLine" id="cb7-3" title="3"><span class="co">#&gt; [1] &quot;TS&quot;         &quot;TSQ&quot;        &quot;TSassigned&quot; &quot;TSc&quot;        &quot;TScloned&quot;  </span></a>
-<a class="sourceLine" id="cb7-4" title="4"><span class="co">#&gt; [6] &quot;TSm&quot;        &quot;TSs&quot;</span></a>
-<a class="sourceLine" id="cb7-5" title="5">DT &lt;-<span class="st"> </span>TS<span class="op">$</span><span class="kw">values</span>(<span class="dt">drop =</span> <span class="ot">TRUE</span>)</a>
-<a class="sourceLine" id="cb7-6" title="6"><span class="kw">ls</span>(<span class="dt">pattern =</span> <span class="st">&quot;TS&quot;</span>)</a>
-<a class="sourceLine" id="cb7-7" title="7"><span class="co">#&gt; [1] &quot;TSQ&quot;        &quot;TSassigned&quot; &quot;TSc&quot;        &quot;TScloned&quot;   &quot;TSm&quot;       </span></a>
-<a class="sourceLine" id="cb7-8" title="8"><span class="co">#&gt; [6] &quot;TSs&quot;</span></a></code></pre></div>
+<a class="sourceLine" id="cb7-2" title="2"><span class="kw">ls</span>(<span class="dt">pattern =</span> <span class="st">&quot;^TS$&quot;</span>)</a>
+<a class="sourceLine" id="cb7-3" title="3"><span class="co">#&gt; [1] &quot;TS&quot;</span></a>
+<a class="sourceLine" id="cb7-4" title="4">DT &lt;-<span class="st"> </span>TS<span class="op">$</span><span class="kw">values</span>(<span class="dt">drop =</span> <span class="ot">TRUE</span>)</a>
+<a class="sourceLine" id="cb7-5" title="5"><span class="kw">ls</span>(<span class="dt">pattern =</span> <span class="st">&quot;^TS$&quot;</span>)</a>
+<a class="sourceLine" id="cb7-6" title="6"><span class="co">#&gt; character(0)</span></a></code></pre></div>
 <p>Please refer to the help pages for further details.</p>
 </div>
 

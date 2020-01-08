@@ -1,5 +1,3 @@
-self <- NULL # no R CMD check note
-
 #' S3 Wrapper Method Generator
 #'
 #' Generates S3 wrapper methods for public methods of \code{R6ClassGenerator}s,
@@ -27,16 +25,16 @@ self <- NULL # no R CMD check note
 #'
 #' @export
 S3WrapperGenerator <- function(R6Method, self = "x", dots = TRUE) {
-  assert_is_expression(R6Method)
-  if (class(eval(R6Method[[1L]][[2L]][[2L]])) != "R6ClassGenerator") {
-    stop('"R6Method" must contain an "R6ClassGenerator".', call. = FALSE)
+  if (!is.expression(R6Method) ||
+      R6Method[[1L]][[2L]][[3L]] != "public_methods" ||
+      class(eval(R6Method[[1L]][[2L]][[2L]])) != "R6ClassGenerator") {
+    stop(
+      '"R6Method" must contain an expression object of a public method of an "R6ClassGenerator".',
+      call. = FALSE
+    )
   }
-  if (R6Method[[1L]][[2L]][[3L]] != "public_methods") {
-    stop('"R6Method" must contain a public method of an "R6ClassGenerator".', call. = FALSE)
-  }
-  assert_is_function(eval(R6Method))
-  assert_is_a_string(self)
-  assert_is_a_bool(assert_all_are_not_na(dots))
+  qassert(self, "S1")
+  qassert(dots, "B1")
 
   args <- list()
   args[[self]] <- alist(`self` = )$`self`

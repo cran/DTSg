@@ -5,23 +5,25 @@
 \alias{cols}
 \title{Get Column Names}
 \usage{
-\method{cols}{DTSg}(x, class = "all", ...)
+\method{cols}{DTSg}(x, class = NULL, pattern = NULL, ...)
 }
 \arguments{
 \item{x}{A \code{\link{DTSg}} object (S3 method only).}
 
-\item{class}{A character string matched to the most specific class (first
-element) of each column's \code{\link{class}} vector or \code{"all"} for all
-column names.}
+\item{class}{An optional character vector matched to the most specific class
+(first element) of each column's \code{\link{class}} vector.}
 
-\item{\dots}{Not used (S3 method only).}
+\item{pattern}{An optional character string passed on to the \code{pattern}
+argument of \code{\link{grep}}.}
+
+\item{\dots}{Further arguments passed on to \code{\link{grep}}.}
 }
 \value{
 Returns a character vector.
 }
 \description{
-Queries all column names of a \code{\link{DTSg}} object or those of a certain
- \code{\link{class}} only.
+Queries all column names of a \code{\link{DTSg}} object, those of certain
+ \code{\link{class}}es and/or those matching a certain pattern only.
 }
 \examples{
 # new DTSg object
@@ -36,5 +38,5 @@ cols(x = x, class = "numeric")
 
 }
 \seealso{
-\code{\link{DTSg}}, \code{\link{class}}
+\code{\link{DTSg}}, \code{\link{class}}, \code{\link{grep}}
 }

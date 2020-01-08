@@ -5,7 +5,6 @@
 \alias{DTSg}
 \alias{new}
 \title{DTSg Class}
-\format{An object of class \code{R6ClassGenerator} of length 24.}
 \usage{
 new(Class, values, ID = "", parameter = "", unit = "", variant = "",
  aggregated = FALSE, fast = FALSE, swallow = FALSE)
@@ -50,8 +49,8 @@ reason, the first column of the provided
 \code{\link[data.table]{data.table}} might have been coerced to
 \code{\link{POSIXct}} and keyed (see \code{\link[data.table]{setkey}} for
 further information). Furthermore, all references to the \dQuote{swallowed}
-\code{\link[data.table]{data.table}} in the global environment are removed
-upon successfull creation of a \code{DTSg} object.}
+\code{\link[data.table]{data.table}} in the global (and only the global)
+environment are removed upon successful creation of a \code{DTSg} object.}
 }
 \value{
 Returns a \code{DTSg} object.
@@ -78,8 +77,7 @@ Due to the \code{\link{POSIXct}} nature of the \emph{.dateTime} column, the
  the lags in seconds between subsequent timestamps are rounded to
  microseconds during integrity checks. This corresponds to the maximum value
  allowed in \code{\link{options}("digits.secs")}. As a consequence, time
- series with a sub-second accuracy higher than a microsecond will never work
- and with a sub-second accuracy lower than a microsecond might work.
+ series with a sub-second accuracy higher than a microsecond will never work.
 
 Some of the methods which take a function as an argument
  (\code{\link{colapply}} and \code{\link{rollapply}}) hand over to it an
@@ -175,4 +173,3 @@ new(Class = "DTSg", values = flow, ID = "River Flow")
  \code{\link[data.table]{setkey}}, \code{\link{difftime}},
  \code{\link{clone}}, \code{\link{options}}, \code{\link{list}}
 }
-\keyword{datasets}

@@ -2,13 +2,6 @@
 context("aggregate method")
 
 test_that(
-  'wrong "funby" value class returns error',
-  expect_error(
-    DTSg$new(DT1)$aggregate(function(.dateTime, .helpers) {"timestamp"}, mean)
-  )
-)
-
-test_that(
   "values are aggregated correctly",
   expect_identical(
     DTSg$new(DT1)$aggregate(byYmdH__, mean)$values(),
@@ -60,7 +53,7 @@ test_that(
 context("alter method")
 
 test_that(
-  '"unrecognised" periodicity returns error',
+  "unrecognised periodicity returns error",
   expect_error(
     DTSg$new(DT1)$alter(by = "unrecognised")
   )
@@ -120,7 +113,10 @@ context("colapply method")
 test_that(
   '"fun" is applied correctly',
   expect_identical(
-    DTSg$new(DT1)$colapply(function(x, ...) {as.factor(x)}, cols = c("col1", "col2"))$cols("factor"),
+    DTSg$new(DT1)$colapply(
+      function(x, ...) {as.factor(x)},
+      cols = c("col1", "col2")
+    )$cols("factor"),
     c("col1", "col2")
   )
 )
@@ -134,6 +130,31 @@ test_that(
       cols = "col2"
     )$values()[["col2"]],
     c(NA, seq(5, 15, by = 2))
+  )
+)
+
+test_that(
+  '"resultCols" adds and overwrites columns correctly',
+  expect_identical(
+    DTSg$new(DT1)$colapply(
+      as.character,
+      cols = c("col1", "col2"),
+      resultCols = c("col1", "col4"),
+      suffix = "_character"
+    )$cols(),
+    c("col1", "col2", "col3", "col4")
+  )
+)
+
+test_that(
+  '"suffix" adds columns correctly',
+  expect_identical(
+    DTSg$new(DT1)$colapply(
+      as.character,
+      cols = c("col1", "col2"),
+      suffix = "_character"
+    )$cols(),
+    c("col1", "col2", "col3", "col1_character", "col2_character")
   )
 )
 
@@ -157,10 +178,49 @@ test_that(
 )
 
 test_that(
-  "no column name is returned",
+  "logical and character column names are returned",
+  expect_identical(
+    DTSg$new(DT2)$cols(c("logical", "character")),
+    c("col2", "col3")
+  )
+)
+
+test_that(
+  "no column name is returned (class)",
   expect_identical(
     DTSg$new(DT1)$cols("integer"),
     character()
+  )
+)
+
+test_that(
+  "column name matching pattern is returned",
+  expect_identical(
+    DTSg$new(DT1)$cols(pattern = "^c.l1$"),
+    "col1"
+  )
+)
+
+test_that(
+  "no column name is returned (pattern)",
+  expect_identical(
+    DTSg$new(DT1)$cols(pattern = "COL1"),
+    character()
+  )
+)
+
+test_that(
+  '"..." passes on arguments correctly',
+  expect_identical(
+    DTSg$new(DT1)$cols(pattern = "COL1", ignore.case = TRUE),
+    "col1"
+  )
+)
+
+test_that(
+  "use of arguments not allowed returns error",
+  expect_error(
+    DTSg$new(DT1)$cols(pattern = ".*", value = FALSE)
   )
 )
 
@@ -171,20 +231,6 @@ test_that(
   "data.table with a single column only returns error",
   expect_error(
     DTSg$new(DT1[, .(date)])
-  )
-)
-
-test_that(
-  'data.table with a "." in a column name returns error',
-  expect_error(
-    DTSg$new(DT1[, .(date, .col1 = col1)])
-  )
-)
-
-test_that(
-  "data.table with duplicated column names returns error",
-  expect_error(
-    DTSg$new(DT1[, .(date, col1, col1)])
   )
 )
 
@@ -235,14 +281,16 @@ test_that(
 )
 
 test_that(
-  "all/only global references are removed (data.table)",
+  "all/only global references are removed",
   expect_true(
     {
       DTcopy <<- data.table::copy(flow)
       DTref1 <<- flow
       DTref2 <<- flow
       DTSg$new(DTref1, swallow = TRUE)
-      exists("DTcopy", where = 1L) && !exists("DTref1", where = 1L) && !exists("DTref2", where = 1L)
+      exists("DTcopy", where = 1L) &&
+        !exists("DTref1", where = 1L) &&
+        !exists("DTref2", where = 1L)
     }
   )
 )
@@ -277,21 +325,27 @@ test_that(
 context("nas method")
 
 test_that(
-  "missing values detected correctly",
+  "missing values are detected correctly",
   expect_identical(
     DTSg$new(DT2)$nas(),
     data.table::data.table(
       .col = c("col1", "col2"),
       .group = c(1L, 1L),
-      .from = as.POSIXct(c("2000-10-29 01:00:00", "2000-10-29 01:00:00"), tz = "Europe/Vienna"),
-      .to = as.POSIXct(c("2000-10-29 01:30:00", "2000-10-29 02:00:00"), tz = "Europe/Vienna"),
+      .from = as.POSIXct(
+        c("2000-10-29 01:00:00", "2000-10-29 01:00:00"),
+        tz = "Europe/Vienna"
+      ),
+      .to = as.POSIXct(
+        c("2000-10-29 01:30:00", "2000-10-29 02:00:00"),
+        tz = "Europe/Vienna"
+      ),
       .n = c(2L, 3L)
     )
   )
 )
 
 test_that(
-  "no missing values return empty data.table",
+  "no missing values returns empty data.table",
   expect_identical(
     DTSg$new(DT2)$nas("col3"),
     data.table::data.table(
@@ -366,7 +420,7 @@ for (by in c(
 }
 
 test_that(
-  '"unrecognised" periodicity is recognised correctly',
+  "unrecognised periodicity is recognised correctly",
   expect_identical(
     DTSg$new(data.table::data.table(
       date = c(
@@ -508,6 +562,35 @@ test_that(
   )
 )
 
+test_that(
+  '"resultCols" adds and overwrites columns correctly',
+  expect_identical(
+    DTSg$new(DT1)$rollapply(
+      function(x, ...) {identity(x)},
+      before = 0L,
+      after = 0L,
+      cols = c("col1", "col2"),
+      resultCols = c("col1", "col4"),
+      suffix = "_character"
+    )$cols(),
+    c("col1", "col2", "col3", "col4")
+  )
+)
+
+test_that(
+  '"suffix" adds columns correctly',
+  expect_identical(
+    DTSg$new(DT1)$rollapply(
+      function(x, ...) {identity(x)},
+      before = 0L,
+      after = 0L,
+      cols = c("col1", "col2"),
+      suffix = "_identity"
+    )$cols(),
+    c("col1", "col2", "col3", "col1_identity", "col2_identity")
+  )
+)
+
 #### summary method ####
 context("summary method")
 
@@ -555,7 +638,7 @@ test_that(
 )
 
 test_that(
-  "all/only global references are removed (DTSg)",
+  "all/only global references are removed",
   expect_true(
     {
       TS <- DTSg$new(flow)
@@ -563,21 +646,23 @@ test_that(
       TSref1 <<- TS
       TSref2 <<- TS
       TS$values(TRUE, TRUE)
-      exists("TScopy", where = 1L) && !exists("TSref1", where = 1L) && !exists("TSref2", where = 1L)
+      exists("TScopy", where = 1L) &&
+        !exists("TSref1", where = 1L) &&
+        !exists("TSref2", where = 1L)
     }
   )
 )
 
 test_that(
-  "name of .dateTime column is restored",
+  "name of .dateTime column is restored (drop = FALSE)",
   expect_identical(
-    names(DTSg$new(DT1)$values())[1L],
+    names(DTSg$new(DT1)$values(FALSE, FALSE))[1L],
     "date"
   )
 )
 
 test_that(
-  "name of .dateTime column is restored (drop)",
+  "name of .dateTime column is restored (drop = TRUE)",
   expect_identical(
     names(DTSg$new(DT1)$values(FALSE, TRUE))[1L],
     "date"
@@ -593,15 +678,15 @@ test_that(
 )
 
 test_that(
-  "class is data.table",
+  "class is data.table (reference = FALSE)",
   expect_identical(
-    class(DTSg$new(DT1)$values()),
+    class(DTSg$new(DT1)$values(FALSE)),
     c("data.table", "data.frame")
   )
 )
 
 test_that(
-  "class is data.table (reference)",
+  "class is data.table (reference = TRUE)",
   expect_identical(
     class(DTSg$new(DT1)$values(TRUE, FALSE, "data.frame")),
     c("data.table", "data.frame")
@@ -609,7 +694,7 @@ test_that(
 )
 
 test_that(
-  "class is data.table (drop)",
+  "class is data.table (drop = TRUE)",
   expect_identical(
     class(DTSg$new(DT1)$values(FALSE, TRUE)),
     c("data.table", "data.frame")
@@ -617,7 +702,7 @@ test_that(
 )
 
 test_that(
-  "class is data.frame",
+  "class is data.frame (drop = FALSE)",
   expect_identical(
     class(DTSg$new(DT1)$values(FALSE, FALSE, "data.frame")),
     "data.frame"
@@ -625,7 +710,7 @@ test_that(
 )
 
 test_that(
-  "class is data.frame (drop)",
+  "class is data.frame (drop = TRUE)",
   expect_identical(
     class(DTSg$new(DT1)$values(FALSE, TRUE, "data.frame")),
     "data.frame"

@@ -5,9 +5,15 @@
 \alias{alter}
 \title{Alter Time Series}
 \usage{
-\method{alter}{DTSg}(x, from = first(self$values(TRUE)[[1L]]),
-  to = last(self$values(TRUE)[[1L]]), by = self$periodicity,
-  rollback = TRUE, clone = getOption("DTSgClone"), ...)
+\method{alter}{DTSg}(
+  x,
+  from = first(self$values(reference = TRUE)[[1L]]),
+  to = last(self$values(reference = TRUE)[[1L]]),
+  by = self$periodicity,
+  rollback = TRUE,
+  clone = getOption("DTSgClone"),
+  ...
+)
 }
 \arguments{
 \item{x}{A \code{\link{DTSg}} object (S3 method only).}
@@ -37,14 +43,14 @@ clone (copy) is made beforehand.}
 Returns a \code{\link{DTSg}} object.
 }
 \description{
-Shortens, lengthens and/or changes the periodicity of a \code{\link{DTSg}}
- object.
+Shortens (subsets), lengthens and/or changes the periodicity of a
+ \code{\link{DTSg}} object.
 }
 \examples{
 # new DTSg object
 x <- DTSg$new(values = flow)
 
-# extract the first two years
+# subset the first two years
 ## R6 method
 x$alter(from = "2007-01-01", to = "2008-12-31")
 
