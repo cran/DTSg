@@ -15,8 +15,6 @@ knitr::opts_chunk$set(
   collapse = TRUE,
   comment = "#>"
 )
-
-options("DTSgClone" = TRUE)
 ```
 
 This vignette introduces the `DTSg` package, shows how to create objects of its main as well as only class and explains their two interfaces: R6 as code and S3 in comments. Familiarity with the `data.table` package helps better understanding certain parts of the vignette, but is not essential to follow it.
@@ -84,7 +82,7 @@ TS  <- TS$colapply(fun = interpolateLinear)
 TS$nas()
 ```
 
-In case no column name is provided through the `cols` argument, the first numeric column is taken by default. Column names for the `cols` argument can be requested from `DTSg` objects with the help of the `cols` method by the way. It supports a `class` and/or `pattern` argument:
+In case no column name is provided through the `cols` argument, the first numeric column is taken by default. Column names for the `cols` argument can be requested from `DTSg` objects with the help of the `cols` method. It supports a `class` and/or `pattern` argument:
 
 ```{r}
 TS$cols() # or 'cols(TS)'
@@ -113,7 +111,7 @@ TSm
 
 Printing the object shows us that its *aggregated* field has been set to `TRUE`. This is merely an indicator telling us to now interpret the timestamps of the series as periods between subsequent timestamps and not as snap-shots anymore.
 
-The one family of temporal aggregation level functions of the package sets a timestamp to the lowest possible time of the corresponding temporal aggregation level, i.e., truncates a timestamp, and the other family extracts a certain part of it. An example is given for quarters below. By convention, the year is set to 2199 in the latter case:
+The one family of temporal aggregation level functions of the package sets a timestamp to the lowest possible time of the corresponding temporal aggregation level, i.e. truncates a timestamp, and the other family extracts a certain part of it. An example is given for quarters below. By convention, the year is set to 2199 in the latter case:
 
 ```{r}
 TSQ <- TS$aggregate(funby = by_Q____, fun = mean)
@@ -140,6 +138,8 @@ TS  <- TS$merge(y = TSs, suffixes = c("_orig", "_movavg"))
 # or 'merge(TS, y = TSs, suffixes = c("_orig", "_movavg"))'
 TS$values()
 ```
+
+A better way to add results of the `colapply` and `rollapply` methods as new columns are actually their `resultCols` and `suffix` arguments. It would not have allowed to demonstrate the `merge` method though.
 
 ## Object Fields
 

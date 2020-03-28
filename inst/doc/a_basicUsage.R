@@ -4,8 +4,6 @@ knitr::opts_chunk$set(
   comment = "#>"
 )
 
-options("DTSgClone" = TRUE)
-
 ## -----------------------------------------------------------------------------
 library(data.table)
 library(DTSg)

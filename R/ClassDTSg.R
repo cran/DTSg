@@ -41,7 +41,7 @@
 #'  for the automatic detection of the time series' periodicity.
 #' @param swallow A logical signalling if the object provided through the
 #'  \code{values} argument shall be \dQuote{swallowed} by the \code{DTSg}
-#'  object, i.e., no copy of the data shall be made. This is generally more
+#'  object, i.e. no copy of the data shall be made. This is generally more
 #'  ressource efficient, but only works if the object provided through the
 #'  \code{values} argument is a \code{\link[data.table]{data.table}}. Be warned,
 #'  however, that if the creation of the \code{DTSg} object fails for some
@@ -78,7 +78,7 @@
 #'  that they can be accessed and actively set with the help of the \code{$}
 #'  operator (for instance, \code{x$ID} gets the value of the \emph{ID} field
 #'  and \code{x$ID <- "River Flow"} sets its value). Please note that fields are
-#'  always modified in place, i.e., no clone (copy) of the object is made
+#'  always modified in place, i.e. no clone (copy) of the object is made
 #'  beforehand. See \code{\link{clone}} for further information. Some of the
 #'  fields are read-only though:
 #'  \itemize{
@@ -207,8 +207,18 @@ DTSg <- R6Class(
       }
     },
 
+    determineCols = function(resultCols, suffix, cols) {
+      if (!is.null(resultCols)) {
+        return(resultCols)
+      } else if (!is.null(suffix)) {
+        return(sprintf("%s%s", cols, suffix))
+      } else {
+        cols
+      }
+    },
+
     rmGlobalReferences = function(addr) {
-      globalObjs <- ls(".GlobalEnv", sorted = FALSE)
+      globalObjs <- ls(globalenv(), sorted = FALSE)
 
       rmGlobalReferences <- function(globalObj, addr) {
         if (addr == address(get(globalObj, envir = globalenv()))) {
@@ -394,13 +404,7 @@ DTSg <- R6Class(
         ))
       }
 
-      if (!is.null(resultCols)) {
-        .cols <- resultCols
-      } else if (!is.null(suffix)) {
-        .cols <- sprintf("%s%s", cols, suffix)
-      } else {
-        .cols <- cols
-      }
+      .cols <- private$determineCols(resultCols, suffix, cols)
 
       private$.values[
         ,
@@ -549,7 +553,7 @@ DTSg <- R6Class(
       DetectNA <- function(x) {
         i <- 0L
         isNAlast <- FALSE
-        return <- function(x) {
+        function(x) {
           if (is.na(x)) {
             if (!isNAlast) {
               i <<- i + 1L
@@ -560,7 +564,7 @@ DTSg <- R6Class(
             n <- NA
             isNAlast <<- FALSE
           }
-          return <- n
+          n
         }
       }
 
@@ -695,11 +699,11 @@ DTSg <- R6Class(
       if (private$.parameter != "") {
         cat("Parameter:   ", private$.parameter   , "\n", sep = "")
       }
-      if (private$.variant != "") {
-        cat("Variant:     ", private$.variant     , "\n", sep = "")
-      }
       if (private$.unit != "") {
         cat("Unit:        ", private$.unit        , "\n", sep = "")
+      }
+      if (private$.variant != "") {
+        cat("Variant:     ", private$.variant     , "\n", sep = "")
       }
       cat(  "Aggregated:  ", private$.isAggregated, "\n", sep = "")
       cat(  "Regular:     ", private$.isRegular   , "\n", sep = "")
@@ -724,7 +728,7 @@ DTSg <- R6Class(
     refresh = function() {
       firstCol <- names(private$.values)[1L]
 
-      if (!qtest(private$.values[[1L]], "P+")) {
+      if (!qtest(private$.values[[1L]], "p+")) {
         set(
           private$.values,
           j = 1L,
@@ -836,7 +840,8 @@ DTSg <- R6Class(
       parameters = list(power = 1),
       clone = getOption("DTSgClone"),
       resultCols = NULL,
-      suffix = NULL
+      suffix = NULL,
+      memoryOverCPU = TRUE
     ) {
       assertRecognisedPeriodicity(self$periodicity)
       assertFunction(fun)
@@ -853,6 +858,7 @@ DTSg <- R6Class(
         qassert(suffix, "S1")
         assertDisjunct(sprintf("%s%s", cols, suffix), self$cols())
       }
+      qassert(memoryOverCPU, "B1")
 
       if (clone) {
         TS <- self$clone(deep = TRUE)
@@ -866,17 +872,12 @@ DTSg <- R6Class(
           parameters = parameters,
           clone = FALSE,
           resultCols = resultCols,
-          suffix = suffix
+          suffix = suffix,
+          memoryOverCPU = memoryOverCPU
         ))
       }
 
-      if (!is.null(resultCols)) {
-        .cols <- resultCols
-      } else if (!is.null(suffix)) {
-        .cols <- sprintf("%s%s", cols, suffix)
-      } else {
-        .cols <- cols
-      }
+      .cols <- private$determineCols(resultCols, suffix, cols)
 
       if (weights == "inverseDistance") {
         qassert(parameters$power, "N1()")
@@ -889,25 +890,56 @@ DTSg <- R6Class(
         weights <- weights / sum(weights)
       }
 
-      wapply <- function(x, fun, ..., before, after, weights) {
-        L <- rev(shift(list(x), 0:before))
-        if (after != 0L) {
-          L <- c(L, shift(list(x), 1:after, type = "lead"))
-        }
+      .helpers = list(
+        before = before,
+        after = after,
+        windowSize = before + 1L + after,
+        centerIndex = before + 1L
+      )
 
-        apply(
-          matrix(unlist(L), ncol = length(L)),
-          1L,
-          fun,
-          ...,
-          w = weights,
-          .helpers = list(
-            before = before,
-            after = after,
-            windowSize = before + 1L + after,
-            centerIndex = before + 1L
+      if (memoryOverCPU) {
+        wapply <- function(x, fun, ..., before, after, weights) {
+          L <- rev(shift(list(x), 0:before))
+          if (after != 0L) {
+            L <- c(L, shift(list(x), 1:after, type = "lead"))
+          }
+
+          apply(
+            matrix(unlist(L), ncol = length(L)),
+            1L,
+            fun,
+            ...,
+            w = weights,
+            .helpers = .helpers
           )
-        )
+        }
+      } else {
+        wapply <- function(x, fun, ..., before, after, weights) {
+          y <- vector(typeof(x), length(x))
+          y[] <- NA
+
+          for (i in seq_along(x)) {
+            lowerBound <- i - before
+
+            if (lowerBound < 1L) {
+              y[i] <- fun(
+                c(rep(NA, abs(lowerBound) + 1L), x[1:(i + after)]),
+                ...,
+                w = weights,
+                .helpers = .helpers
+              )
+            } else {
+              y[i] <- fun(
+                x[lowerBound:(i + after)],
+                ...,
+                w = weights,
+                .helpers = .helpers
+              )
+            }
+          }
+
+          y
+        }
       }
 
       private$.values[

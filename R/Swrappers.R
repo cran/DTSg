@@ -54,10 +54,11 @@ NULL
 #'  supposed to ignore day saving time while forming new timestamps. This can be
 #'  a desired feature for time series strictly following the position of the sun
 #'  (such as hydrological time series). Doing so ensures that diurnal variations
-#'  are preserved under all circumstances and that all intervals are of
-#'  \dQuote{correct} length. This feature requires that the periodicity of the
-#'  time series is not unrecognised and is supported by the following temporal
-#'  aggregation level functions of the package:
+#'  are preserved and all intervals are of \dQuote{correct} length, however, a
+#'  possible limitation might be that the day saving time shift is invariably
+#'  assumed to be exactly one hour long. This feature requires that the
+#'  periodicity of the time series is not unrecognised and is supported by the
+#'  following temporal aggregation level functions of the package:
 #'  \itemize{
 #'    \item \code{\link{byY_____}}
 #'    \item \code{\link{byYQ____}}
@@ -147,7 +148,7 @@ clone <- function(x, ...) {
 #' Clones (copies) a \code{\link{DTSg}} object. Merely assigning a variable
 #'  representing a \code{\link{DTSg}} object to a new variable does not result
 #'  in a copy of the object. Instead, both variables will reference and access
-#'  the same data in the background, i.e., changing one will also affect the
+#'  the same data in the background, i.e. changing one will also affect the
 #'  other. This is not an issue when calling methods with the \emph{DTSgClone}
 #'  option or \code{clone} argument set to \code{TRUE}, but has to be kept in
 #'  mind when setting fields, as they are always modified in place. See
@@ -509,6 +510,11 @@ rollapply <- function(x, ...) {
 #'  are added as new columns with names consisting of the columns specified in
 #'  \code{cols} and this suffix. Existing columns are never overwritten. Only
 #'  used when \code{resultCols} is not specified.
+#' @param memoryOverCPU A logical specifying if memory usage is preferred over
+#'  CPU usage for this method. The former is generally faster for smaller
+#'  windows and shorter time series, the latter for bigger windows and longer
+#'  time series or might even be the only way that works depending on the
+#'  available hardware.
 #'
 #' @details
 #' In addition to the \code{\dots} argument, this method hands over the weights

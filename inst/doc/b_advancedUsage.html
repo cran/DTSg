@@ -8,11 +8,11 @@
 <meta name="generator" content="pandoc" />
 <meta http-equiv="X-UA-Compatible" content="IE=EDGE" />
 
-<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="viewport" content="width=device-width, initial-scale=1" />
 
 <meta name="author" content="Gerold Hepp" />
 
-<meta name="date" content="2020-01-07" />
+<meta name="date" content="2020-03-26" />
 
 <title>B. Advanced Usage</title>
 
@@ -117,9 +117,6 @@ padding-right: 2em;
 font-family: "Open Sans", "Helvetica Neue", Helvetica, Arial, sans-serif;
 font-size: 14px;
 line-height: 1.35;
-}
-#header {
-text-align: center;
 }
 #TOC {
 clear: both;
@@ -288,7 +285,8 @@ code > span.st { color: #d14; }
 code > span.co { color: #888888; font-style: italic; } 
 code > span.ot { color: #007020; } 
 code > span.al { color: #ff0000; font-weight: bold; } 
-code > span.fu { color: #900; font-weight: bold; }  code > span.er { color: #a61717; background-color: #e3d2d2; } 
+code > span.fu { color: #900; font-weight: bold; } 
+code > span.er { color: #a61717; background-color: #e3d2d2; } 
 </style>
 
 
@@ -303,7 +301,7 @@ code > span.fu { color: #900; font-weight: bold; }  code > span.er { color: #a61
 
 <h1 class="title toc-ignore">B. Advanced Usage</h1>
 <h4 class="author">Gerold Hepp</h4>
-<h4 class="date">2020-01-07</h4>
+<h4 class="date">2020-03-26</h4>
 
 
 
@@ -388,10 +386,10 @@ code > span.fu { color: #900; font-weight: bold; }  code > span.er { color: #a61
 <a class="sourceLine" id="cb2-48" title="48"><span class="co">#&gt; Periodicity: Time difference of 1 days</span></a>
 <a class="sourceLine" id="cb2-49" title="49"><span class="co">#&gt; Time zone:   UTC</span></a>
 <a class="sourceLine" id="cb2-50" title="50"><span class="co">#&gt; Timestamps:  731</span></a></code></pre></div>
-<p>As we can see, with cloning set to <code>FALSE</code>, the object was altered in place, i.e., no assignment to a new or reassignment to an existing variable was necessary in order to make the changes stick. This is due to the R6 nature of <code>DTSg</code> objects.</p>
+<p>As we can see, with cloning set to <code>FALSE</code>, the object was altered in place, i.e. no assignment to a new or reassignment to an existing variable was necessary in order to make the changes stick. This is due to the R6 nature of <code>DTSg</code> objects.</p>
 <div id="note" class="section level3">
 <h3>Note</h3>
-<p>Using reference semantics can result in undesired behaviour. Merely assigning a variable representing a <code>DTSg</code> object to a new variable does not result in a copy of the object. Instead, both variables will reference and access the same data in the background, i.e., changing one will also affect the other. In case you want a “real” copy of a <code>DTSg</code> object, you will have to use the <code>clone</code> method with the <code>deep</code> argument set to <code>TRUE</code> (for consistency with the <code>R6</code> package the default is <code>FALSE</code>):</p>
+<p>Using reference semantics can result in undesired behaviour. Merely assigning a variable representing a <code>DTSg</code> object to a new variable does not result in a copy of the object. Instead, both variables will reference and access the same data in the background, i.e. changing one will also affect the other. In case you want a “real” copy of a <code>DTSg</code> object, you will have to use the <code>clone</code> method with the <code>deep</code> argument set to <code>TRUE</code> (for consistency with the <code>R6</code> package the default is <code>FALSE</code>):</p>
 <div class="sourceCode" id="cb3"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb3-1" title="1">TSc &lt;-<span class="st"> </span>TS<span class="op">$</span><span class="kw">clone</span>(<span class="dt">deep =</span> <span class="ot">TRUE</span>)</a>
 <a class="sourceLine" id="cb3-2" title="2"><span class="co"># or &#39;clone(TS, deep = TRUE)&#39;</span></a></code></pre></div>
 </div>
@@ -491,7 +489,7 @@ code > span.fu { color: #900; font-weight: bold; }  code > span.er { color: #a61
 </div>
 <div id="swallowing-and-dropping" class="section level2">
 <h2>Swallowing and Dropping</h2>
-<p>An extension to reference semantics of existing <code>DTSg</code> objects is reference semantics during object creation. This behaviour can be triggered with the help of the <code>swallow</code> argument of the <code>new</code> method. If set to <code>TRUE</code>, a <code>data.table</code> provided through the <code>values</code> argument is “swallowed” by the <code>DTSg</code> object, i.e., no copy of it is made and all references to it are removed from the global (and only the global) environment upon successful object creation:</p>
+<p>An extension to reference semantics of existing <code>DTSg</code> objects is reference semantics during object creation. This behaviour can be triggered with the help of the <code>swallow</code> argument of the <code>new</code> method. If set to <code>TRUE</code>, a <code>data.table</code> provided through the <code>values</code> argument is “swallowed” by the <code>DTSg</code> object, i.e. no copy of it is made and all references to it are removed from the global (and only the global) environment upon successful object creation:</p>
 <div class="sourceCode" id="cb6"><pre class="sourceCode r"><code class="sourceCode r"><a class="sourceLine" id="cb6-1" title="1"><span class="kw">library</span>(data.table)</a>
 <a class="sourceLine" id="cb6-2" title="2"></a>
 <a class="sourceLine" id="cb6-3" title="3">DT &lt;-<span class="st"> </span><span class="kw">copy</span>(flow)</a>
