@@ -12,7 +12,7 @@
 
 <meta name="author" content="Gerold Hepp" />
 
-<meta name="date" content="2020-03-26" />
+<meta name="date" content="2020-05-07" />
 
 <title>A. Basic Usage</title>
 
@@ -301,7 +301,7 @@ code > span.er { color: #a61717; background-color: #e3d2d2; }
 
 <h1 class="title toc-ignore">A. Basic Usage</h1>
 <h4 class="author">Gerold Hepp</h4>
-<h4 class="date">2020-03-26</h4>
+<h4 class="date">2020-05-07</h4>
 
 
 
@@ -602,51 +602,54 @@ code > span.er { color: #a61717; background-color: #e3d2d2; }
 <a class="sourceLine" id="cb15-27" title="27"><span class="co">#&gt; Time zone:   UTC</span></a>
 <a class="sourceLine" id="cb15-28" title="28"><span class="co">#&gt; Timestamps:  731</span></a>
 <a class="sourceLine" id="cb15-29" title="29"></a>
-<a class="sourceLine" id="cb15-30" title="30"><span class="co"># due to reference semantics, the new ID is also propagated to TSassigned, but not to TScloned (as all data manipulating methods create a clone by default, it is usually best to set or update fields after and not before calling such a method)</span></a>
-<a class="sourceLine" id="cb15-31" title="31">TSassigned</a>
-<a class="sourceLine" id="cb15-32" title="32"><span class="co">#&gt; Values:</span></a>
-<a class="sourceLine" id="cb15-33" title="33"><span class="co">#&gt;       .dateTime flow_orig flow_movavg</span></a>
-<a class="sourceLine" id="cb15-34" title="34"><span class="co">#&gt;          &lt;POSc&gt;     &lt;num&gt;       &lt;num&gt;</span></a>
-<a class="sourceLine" id="cb15-35" title="35"><span class="co">#&gt;   1: 2007-01-01     9.540      9.2550</span></a>
-<a class="sourceLine" id="cb15-36" title="36"><span class="co">#&gt;   2: 2007-01-02     9.285      9.1275</span></a>
-<a class="sourceLine" id="cb15-37" title="37"><span class="co">#&gt;   3: 2007-01-03     8.940      9.0000</span></a>
-<a class="sourceLine" id="cb15-38" title="38"><span class="co">#&gt;   4: 2007-01-04     8.745      8.7720</span></a>
-<a class="sourceLine" id="cb15-39" title="39"><span class="co">#&gt;   5: 2007-01-05     8.490      8.5710</span></a>
-<a class="sourceLine" id="cb15-40" title="40"><span class="co">#&gt;  ---                                 </span></a>
-<a class="sourceLine" id="cb15-41" title="41"><span class="co">#&gt; 727: 2008-12-27    18.180     19.3080</span></a>
-<a class="sourceLine" id="cb15-42" title="42"><span class="co">#&gt; 728: 2008-12-28    16.575     16.4520</span></a>
-<a class="sourceLine" id="cb15-43" title="43"><span class="co">#&gt; 729: 2008-12-29    13.695     14.5860</span></a>
-<a class="sourceLine" id="cb15-44" title="44"><span class="co">#&gt; 730: 2008-12-30    12.540     13.6875</span></a>
-<a class="sourceLine" id="cb15-45" title="45"><span class="co">#&gt; 731: 2008-12-31    11.940     12.7250</span></a>
-<a class="sourceLine" id="cb15-46" title="46"><span class="co">#&gt; </span></a>
-<a class="sourceLine" id="cb15-47" title="47"><span class="co">#&gt; ID:          Two River Flows</span></a>
-<a class="sourceLine" id="cb15-48" title="48"><span class="co">#&gt; Aggregated:  FALSE</span></a>
-<a class="sourceLine" id="cb15-49" title="49"><span class="co">#&gt; Regular:     TRUE</span></a>
-<a class="sourceLine" id="cb15-50" title="50"><span class="co">#&gt; Periodicity: Time difference of 1 days</span></a>
-<a class="sourceLine" id="cb15-51" title="51"><span class="co">#&gt; Time zone:   UTC</span></a>
-<a class="sourceLine" id="cb15-52" title="52"><span class="co">#&gt; Timestamps:  731</span></a>
-<a class="sourceLine" id="cb15-53" title="53">TScloned</a>
-<a class="sourceLine" id="cb15-54" title="54"><span class="co">#&gt; Values:</span></a>
-<a class="sourceLine" id="cb15-55" title="55"><span class="co">#&gt;       .dateTime flow_orig flow_movavg</span></a>
-<a class="sourceLine" id="cb15-56" title="56"><span class="co">#&gt;          &lt;POSc&gt;     &lt;num&gt;       &lt;num&gt;</span></a>
-<a class="sourceLine" id="cb15-57" title="57"><span class="co">#&gt;   1: 2007-01-01     9.540      9.2550</span></a>
-<a class="sourceLine" id="cb15-58" title="58"><span class="co">#&gt;   2: 2007-01-02     9.285      9.1275</span></a>
-<a class="sourceLine" id="cb15-59" title="59"><span class="co">#&gt;   3: 2007-01-03     8.940      9.0000</span></a>
-<a class="sourceLine" id="cb15-60" title="60"><span class="co">#&gt;   4: 2007-01-04     8.745      8.7720</span></a>
-<a class="sourceLine" id="cb15-61" title="61"><span class="co">#&gt;   5: 2007-01-05     8.490      8.5710</span></a>
-<a class="sourceLine" id="cb15-62" title="62"><span class="co">#&gt;  ---                                 </span></a>
-<a class="sourceLine" id="cb15-63" title="63"><span class="co">#&gt; 727: 2008-12-27    18.180     19.3080</span></a>
-<a class="sourceLine" id="cb15-64" title="64"><span class="co">#&gt; 728: 2008-12-28    16.575     16.4520</span></a>
-<a class="sourceLine" id="cb15-65" title="65"><span class="co">#&gt; 729: 2008-12-29    13.695     14.5860</span></a>
-<a class="sourceLine" id="cb15-66" title="66"><span class="co">#&gt; 730: 2008-12-30    12.540     13.6875</span></a>
-<a class="sourceLine" id="cb15-67" title="67"><span class="co">#&gt; 731: 2008-12-31    11.940     12.7250</span></a>
-<a class="sourceLine" id="cb15-68" title="68"><span class="co">#&gt; </span></a>
-<a class="sourceLine" id="cb15-69" title="69"><span class="co">#&gt; ID:          River Flow</span></a>
-<a class="sourceLine" id="cb15-70" title="70"><span class="co">#&gt; Aggregated:  FALSE</span></a>
-<a class="sourceLine" id="cb15-71" title="71"><span class="co">#&gt; Regular:     TRUE</span></a>
-<a class="sourceLine" id="cb15-72" title="72"><span class="co">#&gt; Periodicity: Time difference of 1 days</span></a>
-<a class="sourceLine" id="cb15-73" title="73"><span class="co">#&gt; Time zone:   UTC</span></a>
-<a class="sourceLine" id="cb15-74" title="74"><span class="co">#&gt; Timestamps:  731</span></a></code></pre></div>
+<a class="sourceLine" id="cb15-30" title="30"><span class="co"># due to reference semantics, the new ID is also propagated to TSassigned, but</span></a>
+<a class="sourceLine" id="cb15-31" title="31"><span class="co"># not to TScloned (as all data manipulating methods create a clone by default,</span></a>
+<a class="sourceLine" id="cb15-32" title="32"><span class="co"># it is usually best to set or update fields after and not before calling such a</span></a>
+<a class="sourceLine" id="cb15-33" title="33"><span class="co"># method)</span></a>
+<a class="sourceLine" id="cb15-34" title="34">TSassigned</a>
+<a class="sourceLine" id="cb15-35" title="35"><span class="co">#&gt; Values:</span></a>
+<a class="sourceLine" id="cb15-36" title="36"><span class="co">#&gt;       .dateTime flow_orig flow_movavg</span></a>
+<a class="sourceLine" id="cb15-37" title="37"><span class="co">#&gt;          &lt;POSc&gt;     &lt;num&gt;       &lt;num&gt;</span></a>
+<a class="sourceLine" id="cb15-38" title="38"><span class="co">#&gt;   1: 2007-01-01     9.540      9.2550</span></a>
+<a class="sourceLine" id="cb15-39" title="39"><span class="co">#&gt;   2: 2007-01-02     9.285      9.1275</span></a>
+<a class="sourceLine" id="cb15-40" title="40"><span class="co">#&gt;   3: 2007-01-03     8.940      9.0000</span></a>
+<a class="sourceLine" id="cb15-41" title="41"><span class="co">#&gt;   4: 2007-01-04     8.745      8.7720</span></a>
+<a class="sourceLine" id="cb15-42" title="42"><span class="co">#&gt;   5: 2007-01-05     8.490      8.5710</span></a>
+<a class="sourceLine" id="cb15-43" title="43"><span class="co">#&gt;  ---                                 </span></a>
+<a class="sourceLine" id="cb15-44" title="44"><span class="co">#&gt; 727: 2008-12-27    18.180     19.3080</span></a>
+<a class="sourceLine" id="cb15-45" title="45"><span class="co">#&gt; 728: 2008-12-28    16.575     16.4520</span></a>
+<a class="sourceLine" id="cb15-46" title="46"><span class="co">#&gt; 729: 2008-12-29    13.695     14.5860</span></a>
+<a class="sourceLine" id="cb15-47" title="47"><span class="co">#&gt; 730: 2008-12-30    12.540     13.6875</span></a>
+<a class="sourceLine" id="cb15-48" title="48"><span class="co">#&gt; 731: 2008-12-31    11.940     12.7250</span></a>
+<a class="sourceLine" id="cb15-49" title="49"><span class="co">#&gt; </span></a>
+<a class="sourceLine" id="cb15-50" title="50"><span class="co">#&gt; ID:          Two River Flows</span></a>
+<a class="sourceLine" id="cb15-51" title="51"><span class="co">#&gt; Aggregated:  FALSE</span></a>
+<a class="sourceLine" id="cb15-52" title="52"><span class="co">#&gt; Regular:     TRUE</span></a>
+<a class="sourceLine" id="cb15-53" title="53"><span class="co">#&gt; Periodicity: Time difference of 1 days</span></a>
+<a class="sourceLine" id="cb15-54" title="54"><span class="co">#&gt; Time zone:   UTC</span></a>
+<a class="sourceLine" id="cb15-55" title="55"><span class="co">#&gt; Timestamps:  731</span></a>
+<a class="sourceLine" id="cb15-56" title="56">TScloned</a>
+<a class="sourceLine" id="cb15-57" title="57"><span class="co">#&gt; Values:</span></a>
+<a class="sourceLine" id="cb15-58" title="58"><span class="co">#&gt;       .dateTime flow_orig flow_movavg</span></a>
+<a class="sourceLine" id="cb15-59" title="59"><span class="co">#&gt;          &lt;POSc&gt;     &lt;num&gt;       &lt;num&gt;</span></a>
+<a class="sourceLine" id="cb15-60" title="60"><span class="co">#&gt;   1: 2007-01-01     9.540      9.2550</span></a>
+<a class="sourceLine" id="cb15-61" title="61"><span class="co">#&gt;   2: 2007-01-02     9.285      9.1275</span></a>
+<a class="sourceLine" id="cb15-62" title="62"><span class="co">#&gt;   3: 2007-01-03     8.940      9.0000</span></a>
+<a class="sourceLine" id="cb15-63" title="63"><span class="co">#&gt;   4: 2007-01-04     8.745      8.7720</span></a>
+<a class="sourceLine" id="cb15-64" title="64"><span class="co">#&gt;   5: 2007-01-05     8.490      8.5710</span></a>
+<a class="sourceLine" id="cb15-65" title="65"><span class="co">#&gt;  ---                                 </span></a>
+<a class="sourceLine" id="cb15-66" title="66"><span class="co">#&gt; 727: 2008-12-27    18.180     19.3080</span></a>
+<a class="sourceLine" id="cb15-67" title="67"><span class="co">#&gt; 728: 2008-12-28    16.575     16.4520</span></a>
+<a class="sourceLine" id="cb15-68" title="68"><span class="co">#&gt; 729: 2008-12-29    13.695     14.5860</span></a>
+<a class="sourceLine" id="cb15-69" title="69"><span class="co">#&gt; 730: 2008-12-30    12.540     13.6875</span></a>
+<a class="sourceLine" id="cb15-70" title="70"><span class="co">#&gt; 731: 2008-12-31    11.940     12.7250</span></a>
+<a class="sourceLine" id="cb15-71" title="71"><span class="co">#&gt; </span></a>
+<a class="sourceLine" id="cb15-72" title="72"><span class="co">#&gt; ID:          River Flow</span></a>
+<a class="sourceLine" id="cb15-73" title="73"><span class="co">#&gt; Aggregated:  FALSE</span></a>
+<a class="sourceLine" id="cb15-74" title="74"><span class="co">#&gt; Regular:     TRUE</span></a>
+<a class="sourceLine" id="cb15-75" title="75"><span class="co">#&gt; Periodicity: Time difference of 1 days</span></a>
+<a class="sourceLine" id="cb15-76" title="76"><span class="co">#&gt; Time zone:   UTC</span></a>
+<a class="sourceLine" id="cb15-77" title="77"><span class="co">#&gt; Timestamps:  731</span></a></code></pre></div>
 <p>The fields which can be actively set are:</p>
 <ul>
 <li><em>aggregated</em></li>
