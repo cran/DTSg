@@ -1,6 +1,27 @@
-#### assertFasttimeOk ####
+#### assertNAstatusPeriodicityOK ####
 expect_error(
-  assertFasttimeOk(
+  assertNAstatusPeriodicityOK("implicit", .difftime(0, units = "secs")),
+  info = 'implicit "na.status" returns error'
+)
+
+# expect_warning(
+#   assertNAstatusPeriodicityOK("undecided", .difftime(0, units = "secs"), "warning"),
+#   info = 'undecided "na.status" returns warning'
+# )
+
+expect_error(
+  assertNAstatusPeriodicityOK("explicit", "unrecognised"),
+  info = 'unrecognised "periodicity" returns error'
+)
+
+# expect_warning(
+#   assertNAstatusPeriodicityOK("explicit", "unrecognised", "warning"),
+#   info = 'unrecognised "periodicity" returns warning'
+# )
+
+#### assertFasttimeOK ####
+expect_error(
+  assertFasttimeOK(
     seq(
       as.POSIXct("1960-01-01"),
       as.POSIXct("2209-12-31"),
@@ -12,7 +33,7 @@ expect_error(
 )
 
 expect_error(
-  assertFasttimeOk(
+  assertFasttimeOK(
     seq(
       as.POSIXct("1970-01-01"),
       as.POSIXct("2199-12-31"),
@@ -21,12 +42,6 @@ expect_error(
     list(timezone = "Europe/Vienna")
   ),
   info = 'unsuitable "timezone" returns error'
-)
-
-#### assertRecognisedPeriodicity ####
-expect_error(
-  assertRecognisedPeriodicity("unrecognised"),
-  info = 'unrecognised "periodicity" returns error'
 )
 
 #### assertNoBeginningDot ####

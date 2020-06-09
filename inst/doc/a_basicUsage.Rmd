@@ -10,7 +10,7 @@ vignette: >
   %\VignetteEncoding{UTF-8}
 ---
 
-```{r setup, include = FALSE}
+```{r setup, include=FALSE}
 knitr::opts_chunk$set(
   collapse = TRUE,
   comment = "#>"
@@ -48,7 +48,7 @@ TS <- new(Class = "DTSg", values = flow, ID = "River Flow")
 
 ## Object Inspection
 
-Printing the object shows us the data provided, the specified ID and other metadata (if provided) as well as that the object represents a regular UTC time series with a periodicity of one day and 2192 timestamps. It also shows us that the first column has been renamed to *.dateTime.* This columns serves as its time index and cannot be changed at will:
+Printing the object shows us the data provided, the specified ID and other metadata (when provided) as well as that the object represents a regular UTC time series with a periodicity of one day and 2192 timestamps. It also shows us that the first column has been renamed to *.dateTime.* This columns serves as its time index and cannot be changed at will:
 
 ```{r}
 TS$print() # or 'print(TS)' or just 'TS'
@@ -66,7 +66,7 @@ if (requireNamespace("dygraphs", quietly = TRUE) &&
 ```
 ![](plot.png)
 
-Looking at the original data set reveals that the missing values implicitly already were there. Putting it into the object simply expanded the data set to the automatically detected periodicity and made them explicit:
+Looking at the original data set reveals that the missing values implicitly already were there. Putting it into the object simply expanded the data set to the automatically detected periodicity and made them explicit (this behaviour can be changed, however, `DTSg` objects work best with explicit missing values):
 
 ```{r}
 flow[date >= as.POSIXct("2007-10-09", tz = "UTC") & date <= as.POSIXct("2007-11-13", tz = "UTC"), ]
@@ -101,7 +101,7 @@ TS  <- TS$alter(from = "2007-01-01", to = "2008-12-31")
 TS
 ```
 
-In order to get mean monthly river flows as an example, we can use the `aggregate` method with one of the package's temporal aggregation level functions as its `funby` argument:
+In order to get mean monthly river flows as an example, we can use the `aggregate` method with one of the package's temporal aggregation level functions as its `funby` argument (the `fun` argument also accepts a named `list` of functions, which allows for calculating several summary statistics at once):
 
 ```{r}
 TSm <- TS$aggregate(funby = byYm____, fun = mean)
@@ -129,7 +129,7 @@ TSs <- TS$rollapply(fun = mean, na.rm = TRUE, before = 2, after = 2)
 TSs
 ```
 
-On a sidenote, some of the methods which take a function as an argument (`colapply` and `rollapply`) hand over to it an additional `list` argument called `.helpers` containing useful data for the development of user defined functions (please see the respective help pages for further information). This can of course be a problem for functions like `sum` which do not expect such a thing. A solution is to wrap it in an anonymous function with a `...` parameter like this: `function(x, ...) sum(x)`.
+On a sidenote, some of the methods which take a function as an argument (`colapply` and `rollapply`) hand over to it an additional `list` argument called `.helpers` containing useful data for the development of user defined functions (please see the respective help pages for more information). This can of course be a problem for functions like `sum` which do not expect such a thing. A solution is to wrap it in an anonymous function with a `...` parameter like this: `function(x, ...) sum(x)`.
 
 With this said, let's join the result of the last calculation to the original time series and extract its *values* as a `data.table` for further processing in a final step (please note that the *.dateTime* column gets its original name back):
 
@@ -154,6 +154,7 @@ Valid results are returned for the following fields:
 * *aggregated*
 * *fast*
 * *ID*
+* *na.status*
 * *parameter*
 * *periodicity*
 * *regular*
@@ -165,7 +166,7 @@ Valid results are returned for the following fields:
 A subset of this fields can also be actively set (please note that reference semantics always apply to fields, hence the "largely" in the title of the package):
 
 ```{r}
-# two new variables to demonstrate reference semantics
+# two new DTSg objects in order to demonstrate reference semantics
 TSassigned <- TS
 TScloned   <- TS$clone(deep = TRUE) # or 'clone(x = TS, deep = TRUE)'
 
@@ -181,13 +182,9 @@ TSassigned
 TScloned
 ```
 
-The fields which can be actively set are:
+The fields which cannot be actively set are:
 
-* *aggregated*
-* *fast*
-* *ID*
-* *parameter*
-* *unit*
-* *variant*
+* *regular*
+* *timestamps*
 
 For a full explanation of all the methods, functions, arguments and fields available in the package please consult the help pages.

@@ -7,11 +7,12 @@
 \usage{
 \method{alter}{DTSg}(
   x,
-  from = first(self$values(reference = TRUE)[[1L]]),
-  to = last(self$values(reference = TRUE)[[1L]]),
+  from = first(self$values(reference = TRUE)[[".dateTime"]]),
+  to = last(self$values(reference = TRUE)[[".dateTime"]]),
   by = self$periodicity,
   rollback = TRUE,
   clone = getOption("DTSgClone"),
+  na.status = self$na.status,
   ...
 )
 }
@@ -37,14 +38,20 @@ made when appropriate.}
 \item{clone}{A logical specifying if the object is modified in place or if a
 clone (copy) is made beforehand.}
 
+\item{na.status}{A character string. Either \code{"explicit"}, which makes
+missing timestamps according to the recognised periodicity explicit, or
+\code{"implicit"}, which removes timestamps with missing values on all value
+columns. Please note that \code{\link{DTSg}} objects work best with explicit
+missing values.}
+
 \item{\dots}{Not used (S3 method only).}
 }
 \value{
 Returns a \code{\link{DTSg}} object.
 }
 \description{
-Shortens (subsets), lengthens and/or changes the periodicity of a
- \code{\link{DTSg}} object.
+Shortens, lengthens, changes the periodicity and/or the status of missing
+ values of a \code{\link{DTSg}} object.
 }
 \examples{
 # new DTSg object

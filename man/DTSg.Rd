@@ -7,7 +7,8 @@
 \title{DTSg Class}
 \usage{
 new(Class, values, ID = "", parameter = "", unit = "", variant = "",
- aggregated = FALSE, fast = FALSE, swallow = FALSE)
+ aggregated = FALSE, fast = FALSE, swallow = FALSE, na.status = c("explicit",
+ "implicit", "undecided"))
 }
 \arguments{
 \item{Class}{A character string. Must be \code{"DTSg"} in order to create a
@@ -51,6 +52,12 @@ reason, the first column of the provided
 further information). Furthermore, all references to the \dQuote{swallowed}
 \code{\link[data.table]{data.table}} in the global (and only the global)
 environment are removed upon successful creation of a \code{DTSg} object.}
+
+\item{na.status}{A character string. Either \code{"explicit"}, which makes
+missing timestamps according to the recognised periodicity explicit, or
+\code{"implicit"}, which removes timestamps with missing values on all value
+columns, or \code{"undecided"} for no such action. Please note that
+\code{\link{DTSg}} objects work best with explicit missing values.}
 }
 \value{
 Returns a \code{DTSg} object.
@@ -95,8 +102,10 @@ A \code{DTSg} object has the following methods:
    \item \code{aggregate}: See \code{\link{aggregate}} for further
      information.
    \item \code{alter}: See \code{\link{alter}} for further information.
+   \item \code{clone}: See \code{\link{clone}} for further information.
    \item \code{colapply}: See \code{\link{colapply}} for further information.
    \item \code{cols}: See \code{\link{cols}} for further information.
+   \item \code{getCol}: See \code{\link{getCol}} for further information.
    \item \code{merge}: See \code{\link{merge}} for further information.
    \item \code{nas}: See \code{\link{nas}} for further information.
    \item \code{plot}: See \code{\link{plot}} for further information.
@@ -123,12 +132,16 @@ A \code{DTSg} object has the following fields or properties as they are often
    \item \emph{fast:} Same as \code{fast} argument.
    \item \emph{ID:} Same as \code{ID} argument. It is used as the title of
      plots.
+   \item \emph{na.status:} Same as \code{na.status} argument. When set, the
+     \emph{values} of the object are expanded or collapsed accordingly.
    \item \emph{parameter:} Same as \code{parameter} argument. It is used as
      the label of the primary axis of plots.
    \item \emph{periodicity:} A \code{\link{difftime}} object for a regular
      and a character string for an irregular \code{DTSg} object describing
      its periodicity or containing \code{"unrecognised"} in case it could not
-     be detected (read-only).
+     be detected. When set, the periodicity of the time series is changed as
+     specified. See \code{by} argument of \code{\link{alter}} for further
+     information.
    \item \emph{regular:} A logical signalling if all lags in seconds between
      subsequent timestamps are the same (\code{TRUE}) or if some are
      different (\code{FALSE}). A, for instance, monthly time series is
@@ -136,7 +149,8 @@ A \code{DTSg} object has the following fields or properties as they are often
    \item \emph{timestamps:} An integer showing the total number of timestamps
      of the time series (read-only).
    \item \emph{timezone:} A character string containing the time zone of the
-     time series (read-only).
+     time series. When set, the series is converted to the specified time
+     zone. Only names from \code{\link{OlsonNames}} are accepted.
    \item \emph{unit:} Same as \code{unit} argument. It is added to the label
      of the primary axis of plots if the \emph{parameter} field is set.
    \item \emph{variant:} Same as \code{variant} argument. It is added to the
@@ -171,5 +185,5 @@ new(Class = "DTSg", values = flow, ID = "River Flow")
 \code{\link[R6]{R6Class}}, \code{\link{data.frame}},
  \code{\link[data.table]{data.table}}, \code{\link{POSIXct}},
  \code{\link[data.table]{setkey}}, \code{\link{difftime}},
- \code{\link{clone}}, \code{\link{options}}, \code{\link{list}}
+ \code{\link{OlsonNames}}, \code{\link{options}}, \code{\link{list}}
 }

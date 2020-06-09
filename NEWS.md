@@ -1,6 +1,20 @@
+## DTSg v0.5.0
+
+* Added `getCol` method: allows for querying the values of a single column of a `DTSg` object
+* Added `funby` and `ignoreDST` arguments to colapply: allows for applying functions like `cumsum` to a certain temporal level
+* Added `na.status` argument to `new` and `alter` methods: allows for making missing values either `"explicit"` (default) or `"implicit"` or leaving them alone via `"undecided"`
+* Added `na.status` field reflecting the status of missing values
+* Added `na.status` also to the `list` of helper data passed on to temporal aggregation level funtions
+* `funby` argument of `aggregate` method now also accepts a named `list` of functions: allows for calculating several summary statistics at once
+* `periodicity` field can now be actively set in order to change the periodicity of the time series
+* `timezone` field can now be actively set in order to convert the time zone of the series
+* Fixed that a `DTSg` object with only one timestamp accepted a missing value in its *.dateTime* column
+* Improved vignettes and documentation
+* Minor internal code improvements
+
 ## DTSg v0.4.1
 
-* Fixed error "Error in as.POSIXct.numeric(e) : 'origin' must be supplied" for upcoming R 4.1.0
+* Fixed error "Error in as.POSIXct.numeric(e) : 'origin' must be supplied" related to `rollback` in upcoming R 4.1.0
 * Slightly improved vignettes
 * Minor internal code improvements
 
@@ -8,7 +22,7 @@
 
 * Added `memoryOverCPU` argument to `rollapply` method: allows for preferring CPU over memory usage, which makes the method more flexible in terms of resource consumption
 * Settings of option `DTSgClone` in e.g. *.RProfile* are now respected and not overwritten by `TRUE` when the package is loaded
-* Fixed useless coercion of `POSIXct` *.dateTime* columns to `POSIXct` upon object creation in case they contained at least one `NA` value
+* Fixed useless coercion of `POSIXct` *.dateTime* columns to `POSIXct` upon object creation in case they contained at least one missing value
 * Switched to unit testing framework of the `tinytest` package instead of the `testthat` package
 * Slightly improved vignettes and documentation
 * Minor internal code improvements
