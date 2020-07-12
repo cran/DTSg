@@ -50,8 +50,8 @@ missing values.}
 Returns a \code{\link{DTSg}} object.
 }
 \description{
-Shortens, lengthens, changes the periodicity and/or the status of missing
- values of a \code{\link{DTSg}} object.
+Shortens, lengthens, subsets a complete range, changes the periodicity and/or
+ the status of missing values of a \code{\link{DTSg}} object.
 }
 \examples{
 # new DTSg object
@@ -63,6 +63,13 @@ x$alter(from = "2007-01-01", to = "2008-12-31")
 
 ## S3 method
 alter(x = x, from = "2007-01-01", to = "2008-12-31")
+
+# change periodicity to one month
+## R6 method
+x$alter(by = "1 month")
+
+## S3 method
+alter(x = x, by = "1 month")
 
 }
 \seealso{

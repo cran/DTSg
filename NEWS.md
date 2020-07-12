@@ -1,10 +1,26 @@
+## DTSg v0.6.0
+
+* Added `subset` method: allows for filtering rows and/or selecting columns of a `DTSg` object
+* Added `setCols` method: allows for setting the values of columns of, adding columns to and/or removing columns from a `DTSg` object
+* Added `[` extract operator: acts as a shortcut for the `getCol` method
+* Added examples to the documentation of the `colapply` method showing how to calculate moving averages with the help of the `runner` package instead of the `rollapply` method
+* `aggregate` method can benefit from `data.table`'s *GForce* optimisation now when its `fun` argument is provided with a character vector specifying summary functions
+* Greatly sped up `nas` method
+* Temporal aggregation level functions supplied to the `funby` argument of the `colapply` method are not forced to return a `POSIXct` timestamp any longer. They are, however, forced to return an atomic mode (the same goes for the `subset` method).
+* `getCol` method now is capable of also querying the *.dateTime* column
+* `R6Method` argument of `S3WrapperGenerator` now also takes a public method of an `R6ClassGenerator` as a function and not only as an expression
+* Fixed that not all missing values were made explicit after a call to the `merge` method despite an `"explicit"` `na.status` in some cases
+* Fixed that `getCol` method tried to query all numeric columns instead of only the first one by default
+* Improved vignettes and documentation
+* Minor internal code improvements
+
 ## DTSg v0.5.0
 
 * Added `getCol` method: allows for querying the values of a single column of a `DTSg` object
 * Added `funby` and `ignoreDST` arguments to colapply: allows for applying functions like `cumsum` to a certain temporal level
 * Added `na.status` argument to `new` and `alter` methods: allows for making missing values either `"explicit"` (default) or `"implicit"` or leaving them alone via `"undecided"`
 * Added `na.status` field reflecting the status of missing values
-* Added `na.status` also to the `list` of helper data passed on to temporal aggregation level funtions
+* Added `na.status` also to the `list` of helper data passed on to temporal aggregation level functions
 * `funby` argument of `aggregate` method now also accepts a named `list` of functions: allows for calculating several summary statistics at once
 * `periodicity` field can now be actively set in order to change the periodicity of the time series
 * `timezone` field can now be actively set in order to convert the time zone of the series
@@ -20,7 +36,7 @@
 
 ## DTSg v0.4.0
 
-* Added `memoryOverCPU` argument to `rollapply` method: allows for preferring CPU over memory usage, which makes the method more flexible in terms of resource consumption
+* Added `memoryOverCPU` argument to `rollapply` method: allows for preferring CPU over memory usage which makes the method more flexible in terms of resource consumption
 * Settings of option `DTSgClone` in e.g. *.RProfile* are now respected and not overwritten by `TRUE` when the package is loaded
 * Fixed useless coercion of `POSIXct` *.dateTime* columns to `POSIXct` upon object creation in case they contained at least one missing value
 * Switched to unit testing framework of the `tinytest` package instead of the `testthat` package
@@ -43,12 +59,12 @@
 
 ## DTSg v0.2.0
 
-* Added `swallow` argument to `new` method: allows for a more ressource efficient object creation
-* Added `drop` argument to `values` method: allows for a ressource efficient destruction of a `DTSg` object while preserving its *values*
+* Added `swallow` argument to `new` method: allows for a more resource efficient object creation
+* Added `drop` argument to `values` method: allows for a resource efficient destruction of a `DTSg` object while preserving its *values*
 * Added `class` argument to `values` method: can be used to return the *values* of a `DTSg` object as a `data.frame` instead of a `data.table`
-* `alter` method and linked with it `new` and other methods now are way more ressource efficient in some cases
+* `alter` method and linked with it `new` and other methods are now way more resource efficient in some cases
 * Added `timestamps` field providing the total number of timestamps
-* `print` method now ommits empty metadata fields
+* `print` method now omits empty metadata fields
 * Added means to measure code coverage with the help of `covr`
 * Removed `xts` from suggested packages list (already comes along with `dygraphs`)
 * Slightly improved vignettes and documentation

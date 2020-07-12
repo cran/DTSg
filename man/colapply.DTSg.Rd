@@ -3,7 +3,7 @@
 \name{colapply.DTSg}
 \alias{colapply.DTSg}
 \alias{colapply}
-\title{Apply Function Columnwise}
+\title{Apply Function Column-wise}
 \usage{
 \method{colapply}{DTSg}(
   x,
@@ -20,7 +20,7 @@
 \arguments{
 \item{x}{A \code{\link{DTSg}} object (S3 method only).}
 
-\item{fun}{A function. Its return value must be of length one.}
+\item{fun}{A \code{\link{function}}. Its return value must be of length one.}
 
 \item{\dots}{Further arguments passed on to \code{fun}.}
 
@@ -32,7 +32,7 @@ clone (copy) is made beforehand.}
 \item{resultCols}{An optional character vector of the same length as
 \code{cols}. Non-existing columns specified in this argument are added and
 existing columns are overwritten by the return values of \code{fun}. Columns
-are matched elementwise between \code{resultCols} and \code{cols}.}
+are matched element-wise between \code{resultCols} and \code{cols}.}
 
 \item{suffix}{An optional character string. The return values of \code{fun}
 are added as new columns with names consisting of the columns specified in
@@ -46,14 +46,14 @@ temporal level. See examples and \code{\link{aggregate}} for further
 information.}
 
 \item{ignoreDST}{A logical specifying if day saving time is ignored during
-formation of the termporal level. See \code{\link{aggregate}} for further
+formation of the temporal level. See \code{\link{aggregate}} for further
 information.}
 }
 \value{
 Returns a \code{\link{DTSg}} object.
 }
 \description{
-Applies an arbritary function to selected columns of a \code{\link{DTSg}}
+Applies an arbitrary function to selected columns of a \code{\link{DTSg}}
  object.
 }
 \details{
@@ -89,9 +89,57 @@ x$colapply(fun = function(x, ...) {cumsum(x)}, funby = byYm____)
 ## S3 method
 colapply(x = x, fun = function(x, ...) {cumsum(x)}, funby = byYm____)
 
+# calculate moving averages with the help of 'runner' (all four given
+# approaches provide the same result with explicitly missing timestamps)
+if (requireNamespace("runner", quietly = TRUE) &&
+    packageVersion("runner") >= numeric_version("0.3.5")) {
+  wrapper <- function(..., .helpers) {
+    runner::runner(..., idx = .helpers[[".dateTime"]])
+  }
+
+  ## R6 method
+  x$colapply(fun = runner::runner, f = mean, k = 5       , lag = -2       )
+  x$colapply(fun = wrapper       , f = mean, k = "5 days", lag = "-2 days")
+  x$colapply(
+    fun = runner::runner,
+    f = mean,
+    k = "5 days",
+    lag = "-2 days",
+    idx = x$getCol(col = ".dateTime")
+  )
+  x$colapply(
+    fun = runner::runner,
+    f = mean,
+    k = "5 days",
+    lag = "-2 days",
+    idx = x[".dateTime"]
+  )
+
+  ## S3 method
+  colapply(x = x, fun = runner::runner, f = mean, k = 5       , lag = -2       )
+  colapply(x = x, fun = wrapper       , f = mean, k = "5 days", lag = "-2 days")
+  colapply(
+    x = x,
+    fun = runner::runner,
+    f = mean,
+    k = "5 days",
+    lag = "-2 days",
+    idx = getCol(x = x, col = ".dateTime")
+  )
+  colapply(
+    x = x,
+    fun = runner::runner,
+    f = mean,
+    k = "5 days",
+    lag = "-2 days",
+    idx = x[".dateTime"]
+  )
+}
+
 }
 \seealso{
-\code{\link{DTSg}}, \code{\link{cols}}, \code{\link{TALFs}},
- \code{\link{aggregate}}, \code{\link{list}}, \code{\link{POSIXct}},
- \code{\link{difftime}}, \code{\link{interpolateLinear}}
+\code{\link{DTSg}}, \code{\link{function}}, \code{\link{cols}},
+ \code{\link{TALFs}}, \code{\link{aggregate}}, \code{\link{list}},
+ \code{\link{POSIXct}}, \code{\link{difftime}},
+ \code{\link{interpolateLinear}}
 }

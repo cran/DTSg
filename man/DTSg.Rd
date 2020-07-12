@@ -43,7 +43,7 @@ for the automatic detection of the time series' periodicity.}
 \item{swallow}{A logical signalling if the object provided through the
 \code{values} argument shall be \dQuote{swallowed} by the \code{DTSg}
 object, i.e. no copy of the data shall be made. This is generally more
-ressource efficient, but only works if the object provided through the
+resource efficient, but only works if the object provided through the
 \code{values} argument is a \code{\link[data.table]{data.table}}. Be warned,
 however, that if the creation of the \code{DTSg} object fails for some
 reason, the first column of the provided
@@ -57,7 +57,7 @@ environment are removed upon successful creation of a \code{DTSg} object.}
 missing timestamps according to the recognised periodicity explicit, or
 \code{"implicit"}, which removes timestamps with missing values on all value
 columns, or \code{"undecided"} for no such action. Please note that
-\code{\link{DTSg}} objects work best with explicit missing values.}
+\code{\link{DTSg}} objects work best with explicitly missing values.}
 }
 \value{
 Returns a \code{DTSg} object.
@@ -83,7 +83,7 @@ Due to the \code{\link{POSIXct}} nature of the \emph{.dateTime} column, the
  objects. In order to prevent at least some of the possible precision issues,
  the lags in seconds between subsequent timestamps are rounded to
  microseconds during integrity checks. This corresponds to the maximum value
- allowed in \code{\link{options}("digits.secs")}. As a consequence, time
+ allowed for \code{\link{options}("digits.secs")}. As a consequence, time
  series with a sub-second accuracy higher than a microsecond will never work.
 
 Some of the methods which take a function as an argument
@@ -109,9 +109,12 @@ A \code{DTSg} object has the following methods:
    \item \code{merge}: See \code{\link{merge}} for further information.
    \item \code{nas}: See \code{\link{nas}} for further information.
    \item \code{plot}: See \code{\link{plot}} for further information.
+   \item \code{print}: See \code{\link{print}} for further information.
    \item \code{refresh}: See \code{\link{refresh}} for further information.
    \item \code{rollapply}: See \code{\link{rollapply}} for further
      information.
+   \item \code{setCols}: See \code{\link{setCols}} for further information.
+   \item \code{subset}: See \code{\link{subset}} for further information.
    \item \code{summary}: See \code{\link{summary}} for further information.
    \item \code{values}: See \code{\link{values}} for further information.
  }
@@ -120,7 +123,7 @@ A \code{DTSg} object has the following methods:
 \section{Fields}{
 
 A \code{DTSg} object has the following fields or properties as they are often
- called. They are implemented through so called active bindings, which means
+ called. They are implemented through so called active bindings which means
  that they can be accessed and actively set with the help of the \code{$}
  operator (for instance, \code{x$ID} gets the value of the \emph{ID} field
  and \code{x$ID <- "River Flow"} sets its value). Please note that fields are
@@ -152,9 +155,9 @@ A \code{DTSg} object has the following fields or properties as they are often
      time series. When set, the series is converted to the specified time
      zone. Only names from \code{\link{OlsonNames}} are accepted.
    \item \emph{unit:} Same as \code{unit} argument. It is added to the label
-     of the primary axis of plots if the \emph{parameter} field is set.
+     of the primary axis of plots when the \emph{parameter} field is set.
    \item \emph{variant:} Same as \code{variant} argument. It is added to the
-     label of the primary axis of plots if the \emph{parameter} field is set.
+     label of the primary axis of plots when the \emph{parameter} field is set.
  }
 
 The \emph{parameter}, \emph{unit} and \emph{variant} fields are especially

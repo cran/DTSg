@@ -1,3 +1,37 @@
+assertFasttimeOK <- function(.dateTime, .helpers) {
+  if (!requireNamespace("fasttime", quietly = TRUE)) {
+    stop('Package "fasttime" must be installed for this TALF.', call. = FALSE)
+  }
+  if (year(.dateTime[1L]) < 1970L || year(last(.dateTime)) > 2199L) {
+    stop(
+      "Dates must be between the years 1970 and 2199 for this TALF.",
+      call. = FALSE
+    )
+  }
+  if (.helpers[["timezone"]] != "UTC") {
+    stop('Time zone must be "UTC" for this TALF.', call. = FALSE)
+  }
+
+  invisible(TRUE)
+}
+
+assertFilter <- function(x, limit) {
+  if (!testMultiClass(x, c("integer", "numeric")) && !is.expression(x)) {
+    stop('"i" must be a numeric vector or an expression.', call. = FALSE)
+  } else if (testMultiClass(x, c("integer", "numeric"))) {
+    assertIntegerish(
+      x,
+      lower = -limit,
+      upper = limit,
+      any.missing = FALSE,
+      unique = TRUE,
+      .var.name = "i"
+    )
+  }
+
+  invisible(x)
+}
+
 assertNAstatusPeriodicityOK <- function(
   na.status,
   periodicity,
@@ -6,7 +40,7 @@ assertNAstatusPeriodicityOK <- function(
   level <- match.arg(level)
 
   msg <- paste(
-    "This functionality may only give complete and correct results for time series with explicit missing values and recognised periodicity.",
+    "This functionality may only give complete and correct results for time series with explicitly missing values and recognised periodicity.",
     'Consider calling "alter()" with "na.status = \'explicit\'" and/or specified "by" argument first.',
     sep = "\n"
   )
@@ -18,24 +52,7 @@ assertNAstatusPeriodicityOK <- function(
     }
   }
 
-  TRUE
-}
-
-assertFasttimeOK <- function(.dateTime, .helpers) {
-  if (!requireNamespace("fasttime", quietly = TRUE)) {
-    stop('Package "fasttime" must be installed for this TALF.', call. = FALSE)
-  }
-  if (year(.dateTime[1L]) < 1970L || year(last(.dateTime)) > 2199L) {
-    stop(
-      "Dates must be between the years 1970 and 2199 for this TALF.",
-      call. = FALSE
-    )
-  }
-  if (.helpers$timezone != "UTC") {
-    stop('Time zone must be "UTC" for this TALF.', call. = FALSE)
-  }
-
-  TRUE
+  invisible(TRUE)
 }
 
 assertNoBeginningDot <- function(x) {
@@ -46,5 +63,5 @@ assertNoBeginningDot <- function(x) {
     )
   }
 
-  x
+  invisible(x)
 }

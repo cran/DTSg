@@ -11,16 +11,16 @@
 #' Linearly interpolates missing values of a numeric vector. For use with the
 #'  \code{\link{colapply}} method of a \code{\link{DTSg}} object. Other uses are
 #'  possible, but not recommended. It also serves as an example for writing user
-#'  defined functions utilising one of the \code{\link{list}}s with helper data
-#'  as handed over by various methods of \code{\link{DTSg}} objects. See
-#'  \code{\link{DTSg}} for further information.
+#'  defined \code{\link{function}}s utilising one of the \code{\link{list}}s
+#'  with helper data as handed over by some methods of \code{\link{DTSg}}
+#'  objects. See \code{\link{DTSg}} for further information.
 #'
 #' @param .col A numeric vector.
 #' @param roll A positive numeric specifying the maximum size of gaps whose
 #'  missing values shall be filled. For time series with unrecognised
 #'  periodicity it is interpreted as seconds and for time series with recognised
 #'  periodicity it is multiplied with the maximum time difference between two
-#'  subsequent time steps in seconds. So for regular time series it is the
+#'  subsequent time steps in seconds. Thus, for regular time series it is the
 #'  number of time steps and for irregular it is an approximation of it.
 #' @param rollends A logical specifying if missing values at the start and end
 #'  of the time series shall be filled as well. See
@@ -30,7 +30,7 @@
 #'
 #' @return Returns a numeric vector.
 #'
-#' @seealso \code{\link{DTSg}}, \code{\link{colapply}},
+#' @seealso \code{\link{DTSg}}, \code{\link{colapply}}, \code{\link{function}},
 #'  \code{\link[data.table]{data.table}}
 #'
 #' @examples
@@ -49,13 +49,12 @@ interpolateLinear <- function(.col, roll = Inf, rollends = TRUE, .helpers) {
   qassert(.col, "n+")
   qassert(roll, "N1(0,]")
 
-  if (.helpers$periodicity != "unrecognised") {
-    roll <- roll * as.numeric(.helpers$maxLag, units = "secs")
+  if (.helpers[["periodicity"]] != "unrecognised") {
+    roll <- roll * as.numeric(.helpers[["maxLag"]], units = "secs")
   }
 
-  DT <- data.table(.dateTime = .helpers$.dateTime, key = ".dateTime")
-  values <- data.table(.dateTime = .helpers$.dateTime, .col = .col, key = ".dateTime")
-  values <- values[!is.na(.col), ]
+  DT <- data.table(.dateTime = .helpers[[".dateTime"]], key = ".dateTime")
+  values <- DT[, list(.dateTime = .dateTime[!is.na(.col)], .col = .col[!is.na(.col)])]
 
   DT <- values[
     DT,

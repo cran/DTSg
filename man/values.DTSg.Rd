@@ -22,7 +22,7 @@ information.}
 
 \item{drop}{A logical specifying if the object and all references to it shall
 be removed from the global (and only the global) environment after
-successfully querying its values. This feature allows for a ressource
+successfully querying its values. This feature allows for a resource
 efficient destruction of a \code{\link{DTSg}} object while preserving its
 \emph{values.}}
 
@@ -41,7 +41,7 @@ Queries the \emph{values} of a \code{\link{DTSg}} object.
 }
 \details{
 A reference to the \emph{values} of a \code{\link{DTSg}} object can be used
- to modify them in place. This includes the \emph{.dateTime} column, which
+ to modify them in place. This includes the \emph{.dateTime} column which
  serves as the object's time index. Modifying this column can therefore
  endanger the object's integrity. In case needs to do so ever arise,
  \code{\link{refresh}} should be called immediately afterwards in order to

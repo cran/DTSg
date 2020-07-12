@@ -23,7 +23,7 @@
 \arguments{
 \item{x}{A \code{\link{DTSg}} object (S3 method only).}
 
-\item{fun}{A function. Its return value must be of length one.}
+\item{fun}{A \code{\link{function}}. Its return value must be of length one.}
 
 \item{\dots}{Further arguments passed on to \code{fun}.}
 
@@ -49,7 +49,7 @@ clone (copy) is made beforehand.}
 \item{resultCols}{An optional character vector of the same length as
 \code{cols}. Non-existing columns specified in this argument are added and
 existing columns are overwritten by the return values of \code{fun}. Columns
-are matched elementwise between \code{resultCols} and \code{cols}.}
+are matched element-wise between \code{resultCols} and \code{cols}.}
 
 \item{suffix}{An optional character string. The return values of \code{fun}
 are added as new columns with names consisting of the columns specified in
@@ -96,7 +96,7 @@ Currently, only one method to calculate weights is supported:
 # new DTSg object
 x <- DTSg$new(values = flow)
 
-# calculate moving average
+# calculate a moving average
 ## R6 method
 x$rollapply(fun = mean, na.rm = TRUE, before = 2, after = 2)
 
@@ -105,5 +105,6 @@ rollapply(x = x, fun = mean, na.rm = TRUE, before = 2, after = 2)
 
 }
 \seealso{
-\code{\link{DTSg}}, \code{\link{cols}}, \code{\link{list}}
+\code{\link{DTSg}}, \code{\link{function}}, \code{\link{cols}},
+ \code{\link{list}}
 }

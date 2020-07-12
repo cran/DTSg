@@ -23,11 +23,15 @@
 \code{\link{TALFs}} or a user defined temporal aggregation level function.
 See details for further information.}
 
-\item{fun}{A summary function or a named \code{\link{list}} of summary
-functions applied columnwise to all the values of the same temporal
-aggregation level, for instance, \code{\link{mean}} or
-\code{\link{list}(min = \link{min}, max = \link{max})}. The return value(s)
-must be of length one.}
+\item{fun}{A summary function, \code{\link{list}} of summary functions or
+character vector specifying summary functions applied column-wise to all the
+values of the same temporal aggregation level, for instance,
+\code{\link{mean}}, \code{\link{list}(min = \link{min}, max = \link{max})}
+or \code{c(sd = "\link{sd}", var = "\link{var}")}. A list or character
+vector must have names in case more than one summary function is provided.
+The method can benefit from \pkg{data.table}'s
+\emph{\link[data.table:datatable-optimize]{GForce}} optimisation in case a
+character vector is used. The return value(s) must be of length one.}
 
 \item{\dots}{Further arguments passed on to \code{fun}.}
 
@@ -48,7 +52,7 @@ Returns an aggregated \code{\link{DTSg}} object.
 }
 \description{
 Applies a temporal aggregation level function to the \emph{.dateTime} column
- of a \code{\link{DTSg}} object and aggregates its \emph{values} columnwise
+ of a \code{\link{DTSg}} object and aggregates its \emph{values} column-wise
  to the function's temporal aggregation level utilising one or more provided
  summary functions. Additionally, it sets the object's \emph{aggregated}
  field to \code{TRUE}. See \code{\link{DTSg}} for further information.
@@ -86,7 +90,7 @@ Depending on the number of columns to aggregate, the \emph{.n} column
  are preserved and all intervals are of \dQuote{correct} length, however, a
  possible limitation might be that the day saving time shift is invariably
  assumed to be exactly one hour long. This feature requires that the
- periodicity of the time series is not unrecognised and is supported by the
+ periodicity of the time series is recognised and is supported by the
  following temporal aggregation level functions of the package:
  \itemize{
    \item \code{\link{byY_____}}
@@ -104,20 +108,21 @@ x <- DTSg$new(values = flow)
 
 # mean yearly river flows
 ## R6 method
-x$aggregate(funby = byY_____, fun = mean, na.rm = TRUE)
+x$aggregate(funby = byY_____, fun = "mean", na.rm = TRUE)
 
 ## S3 method
-aggregate(x = x, funby = byY_____, fun = mean, na.rm = TRUE)
+aggregate(x = x, funby = byY_____, fun = "mean", na.rm = TRUE)
 
-# minimum and maximum river flow per quarter
+# standard deviation and variance of river flows per quarter
 ## R6 method
-x$aggregate(funby = byYQ____, fun = list(min = min, max = max), na.rm = TRUE)
+x$aggregate(funby = byYQ____, fun = c(sd = "sd", var = "var"), na.rm = TRUE)
 
 ## S3 method
-aggregate(x = x, funby = byYQ____, fun = list(min = min, max = max), na.rm = TRUE)
+aggregate(x = x, funby = byYQ____, fun = c(sd = "sd", var = "var"), na.rm = TRUE)
 
 }
 \seealso{
 \code{\link{DTSg}}, \code{\link{TALFs}}, \code{\link{list}},
- \code{\link{cols}}, \code{\link{POSIXct}}
+ \emph{\link[data.table:datatable-optimize]{GForce}}, \code{\link{cols}},
+ \code{\link{POSIXct}}
 }
