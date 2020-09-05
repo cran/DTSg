@@ -3,7 +3,7 @@
 \name{subset.DTSg}
 \alias{subset.DTSg}
 \alias{subset}
-\title{Subset Time Series}
+\title{Time Series Subset}
 \usage{
 \method{subset}{DTSg}(
   x,
@@ -13,6 +13,8 @@
   ignoreDST = FALSE,
   na.status = "implicit",
   clone = getOption("DTSgClone"),
+  multiplier = 1L,
+  funbyHelpers = NULL,
   ...
 )
 }
@@ -40,15 +42,17 @@ information.}
 \item{na.status}{A character string. Either \code{"explicit"}, which makes
 missing timestamps according to the recognised periodicity explicit, or
 \code{"implicit"}, which removes timestamps with missing values on all value
-columns. Please note that filtering rows and having or making missing
-timestamps explicit equals to setting the values of all other timestamps to
-missing. Its default value is therefore \code{"implicit"}. To simply subset
-a complete range of a \code{\link{DTSg}} object while leaving
-\code{na.status} untouched, \code{\link{alter}} is probably the better
-choice.}
+columns. See details for further information.}
 
 \item{clone}{A logical specifying if the object is modified in place or if a
 clone (copy) is made beforehand.}
+
+\item{multiplier}{A positive integerish value \dQuote{multiplying} the
+temporal aggregation level of certain \code{\link{TALFs}}. See
+\code{\link{aggregate}} for further information.}
+
+\item{funbyHelpers}{An optional \code{\link{list}} with helper data passed on
+to \code{funby}. See \code{\link{aggregate}} for further information.}
 
 \item{\dots}{Not used (S3 method only).}
 }
@@ -58,23 +62,31 @@ Returns a \code{\link{DTSg}} object.
 \description{
 Filter rows and/or select columns of a \code{\link{DTSg}} object.
 }
+\details{
+Please note that filtering rows and having or making missing timestamps
+ explicit equals to setting the values of all other timestamps to missing.
+ The default value of \code{na.status} is therefore \code{"implicit"}. To
+ simply filter for a consecutive range of a \code{\link{DTSg}} object while
+ leaving \code{na.status} untouched, \code{\link{alter}} is probably the
+ better choice.
+}
 \examples{
 # new DTSg object
 x <- DTSg$new(values = flow)
 
-# filter for the last six rows
+# filter for the first six rows
 ## R6 method
-x$subset(i = (.N - 5):.N)
+x$subset(i = 1:6)
 
 ## S3 method
-subset(x = x, i = (.N - 5):.N)
+subset(x = x, i = 1:6)
 
-# filter for the first two observations per year
+# filter for the last two observations per year
 ## R6 method
-x$subset(i = 1:2, funby = function(x, ...) {data.table::year(x)})
+x$subset(i = (.N - 1):.N, funby = function(x, ...) {data.table::year(x)})
 
 ## S3 method
-subset(x = x, i = 1:2, funby = function(x, ...) {data.table::year(x)})
+subset(x = x, i = (.N - 1):.N, funby = function(x, ...) {data.table::year(x)})
 
 }
 \seealso{

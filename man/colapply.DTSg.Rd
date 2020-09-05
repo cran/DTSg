@@ -10,11 +10,14 @@
   fun,
   ...,
   cols = self$cols(class = "numeric")[1L],
-  clone = getOption("DTSgClone"),
   resultCols = NULL,
   suffix = NULL,
+  helpers = TRUE,
   funby = NULL,
-  ignoreDST = FALSE
+  ignoreDST = FALSE,
+  multiplier = 1L,
+  funbyHelpers = NULL,
+  clone = getOption("DTSgClone")
 )
 }
 \arguments{
@@ -26,9 +29,6 @@
 
 \item{cols}{A character vector specifying the columns to apply \code{fun} to.}
 
-\item{clone}{A logical specifying if the object is modified in place or if a
-clone (copy) is made beforehand.}
-
 \item{resultCols}{An optional character vector of the same length as
 \code{cols}. Non-existing columns specified in this argument are added and
 existing columns are overwritten by the return values of \code{fun}. Columns
@@ -39,6 +39,9 @@ are added as new columns with names consisting of the columns specified in
 \code{cols} and this suffix. Existing columns are never overwritten. Only
 used when \code{resultCols} is not specified.}
 
+\item{helpers}{A logical specifying if helper data shall be handed over to
+\code{fun}. See details for further information.}
+
 \item{funby}{One of the temporal aggregation level functions described in
 \code{\link{TALFs}} or a user defined temporal aggregation level function.
 Can be used to apply functions like \code{\link{cumsum}} to a certain
@@ -48,6 +51,16 @@ information.}
 \item{ignoreDST}{A logical specifying if day saving time is ignored during
 formation of the temporal level. See \code{\link{aggregate}} for further
 information.}
+
+\item{multiplier}{A positive integerish value \dQuote{multiplying} the
+temporal aggregation level of certain \code{\link{TALFs}}. See
+\code{\link{aggregate}} for further information.}
+
+\item{funbyHelpers}{An optional \code{\link{list}} with helper data passed on
+to \code{funby}. See \code{\link{aggregate}} for further information.}
+
+\item{clone}{A logical specifying if the object is modified in place or if a
+clone (copy) is made beforehand.}
 }
 \value{
 Returns a \code{\link{DTSg}} object.
@@ -57,7 +70,7 @@ Applies an arbitrary function to selected columns of a \code{\link{DTSg}}
  object.
 }
 \details{
-In addition to the \code{\dots} argument, this method hands over a
+In addition to the \code{\dots} argument, this method optionally hands over a
  \code{\link{list}} argument with helper data called \code{.helpers} to
  \code{fun}. \code{.helpers} contains the following named elements:
  \itemize{
@@ -84,10 +97,10 @@ colapply(x = x, fun = interpolateLinear)
 
 # daily cumulative sums per month
 ## R6 method
-x$colapply(fun = function(x, ...) {cumsum(x)}, funby = byYm____)
+x$colapply(fun = cumsum, helpers = FALSE, funby = byYm____)
 
 ## S3 method
-colapply(x = x, fun = function(x, ...) {cumsum(x)}, funby = byYm____)
+colapply(x = x, fun = cumsum, helpers = FALSE, funby = byYm____)
 
 # calculate moving averages with the help of 'runner' (all four given
 # approaches provide the same result with explicitly missing timestamps)

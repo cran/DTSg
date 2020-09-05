@@ -13,15 +13,10 @@ NULL
 #' @param funby One of the temporal aggregation level functions described in
 #'  \code{\link{TALFs}} or a user defined temporal aggregation level function.
 #'  See details for further information.
-#' @param fun A summary function, \code{\link{list}} of summary functions or
-#'  character vector specifying summary functions applied column-wise to all the
-#'  values of the same temporal aggregation level, for instance,
-#'  \code{\link{mean}}, \code{\link{list}(min = \link{min}, max = \link{max})}
-#'  or \code{c(sd = "\link{sd}", var = "\link{var}")}. A list or character
-#'  vector must have names in case more than one summary function is provided.
-#'  The method can benefit from \pkg{data.table}'s
-#'  \emph{\link[data.table:datatable-optimize]{GForce}} optimisation in case a
-#'  character vector is used. The return value(s) must be of length one.
+#' @param fun A summary function, (named) \code{\link{list}} of summary
+#'  functions or (named) character vector specifying summary functions applied
+#'  column-wise to all the values of the same temporal aggregation level. The
+#'  return value(s) must be of length one. See details for further information.
 #' @param \dots Further arguments passed on to \code{fun}.
 #' @param cols A character vector specifying the columns to aggregate.
 #' @param n A logical specifying if a column named \emph{.n} giving the number
@@ -29,6 +24,11 @@ NULL
 #'  information.
 #' @param ignoreDST A logical specifying if day saving time is ignored during
 #'  aggregation. See details for further information.
+#' @param multiplier A positive integerish value \dQuote{multiplying} the
+#'  temporal aggregation level of certain \code{\link{TALFs}}. See details for
+#'  further information.
+#' @param funbyHelpers An optional \code{\link{list}} with helper data passed on
+#'  to \code{funby}. See details for further information.
 #' @param clone A logical specifying if the object is modified in place or if a
 #'  clone (copy) is made beforehand.
 #'
@@ -36,8 +36,8 @@ NULL
 #' User defined temporal aggregation level functions have to return a
 #'  \code{\link{POSIXct}} vector of the same length as the time series and
 #'  accept two arguments: a \code{\link{POSIXct}} vector as its first and a
-#'  \code{\link{list}} with helper data as its second. This \code{\link{list}}
-#'  in turn contains the following named elements:
+#'  \code{\link{list}} with helper data as its second. The default elements of
+#'  this \code{\link{list}} are as follows:
 #'  \itemize{
 #'    \item \emph{timezone:} Same as \emph{timezone} field. See
 #'      \code{\link{DTSg}} for further information.
@@ -46,7 +46,24 @@ NULL
 #'      \code{\link{DTSg}} for further information.
 #'    \item \emph{na.status:} Same as \emph{na.status} field. See
 #'      \code{\link{DTSg}} for further information.
+#'    \item \emph{multiplier:} Same as \code{multiplier} argument.
 #'  }
+#'  Any additional element specified in the \code{funbyHelpers} argument is
+#'   appended to the end of the \code{\link{list}}. In case \code{funbyHelpers}
+#'   contains a \emph{ignoreDST} or \emph{multiplier} element, it takes
+#'   precedence over the respective method argument. A \emph{timezone},
+#'   \emph{periodicity} or \emph{na.status} element is rejected.
+#'
+#' Some examples for \code{fun} are as follows:
+#'  \itemize{
+#'    \item \code{\link{mean}}
+#'    \item \code{\link{list}(min = \link{min}, max = \link{max})}
+#'    \item \code{c(sd = "\link{sd}", var = "\link{var}")}
+#'  }
+#'  A list or character vector must have names in case more than one summary
+#'  function is provided. The method can benefit from \pkg{data.table}'s
+#'  \emph{\link[data.table:datatable-optimize]{GForce}} optimisation in case a
+#'  character vector specifying summary functions is provided.
 #'
 #' Depending on the number of columns to aggregate, the \emph{.n} column
 #'  contains different counts:
@@ -66,7 +83,7 @@ NULL
 #'  possible limitation might be that the day saving time shift is invariably
 #'  assumed to be exactly one hour long. This feature requires that the
 #'  periodicity of the time series is recognised and is supported by the
-#'  following temporal aggregation level functions of the package:
+#'  following \code{\link{TALFs}} of the package:
 #'  \itemize{
 #'    \item \code{\link{byY_____}}
 #'    \item \code{\link{byYQ____}}
@@ -77,11 +94,40 @@ NULL
 #'    \item \code{\link{by___H__}}
 #'  }
 #'
+#' The temporal aggregation level of certain \code{\link{TALFs}} can be adjusted
+#'  with the help of the \code{multiplier} argument. A \code{multiplier} of
+#'  \code{10}, for example, makes \code{\link{byY_____}} aggregate to decades
+#'  instead of years. Another example is a \code{multiplier} of \code{6}
+#'  provided to \code{\link{by_m____}}. The function then aggregates all months
+#'  of all first and all months of all second half years instead of all months
+#'  of all years separately. This feature is supported by the following
+#'  \code{\link{TALFs}} of the package:
+#'  \itemize{
+#'    \item \code{\link{byFasttimeY_____}}
+#'    \item \code{\link{byFasttimeYm____}}
+#'    \item \code{\link{byFasttimeYmdH__}}
+#'    \item \code{\link{byFasttimeYmdHM_}}
+#'    \item \code{\link{byFasttimeYmdHMS}}
+#'    \item \code{\link{byFasttime_m____}}
+#'    \item \code{\link{byFasttime___H__}}
+#'    \item \code{\link{byFasttime____M_}}
+#'    \item \code{\link{byFasttime_____S}}
+#'    \item \code{\link{byY_____}}
+#'    \item \code{\link{byYm____}}
+#'    \item \code{\link{byYmdH__}} (UTC and equivalent as well as all Etc/GMT only)
+#'    \item \code{\link{byYmdHM_}}
+#'    \item \code{\link{byYmdHMS}}
+#'    \item \code{\link{by_m____}}
+#'    \item \code{\link{by___H__}} (UTC and equivalent as well as all Etc/GMT only)
+#'    \item \code{\link{by____M_}}
+#'    \item \code{\link{by_____S}}
+#'  }
+#'
 #' @return Returns an aggregated \code{\link{DTSg}} object.
 #'
 #' @seealso \code{\link{DTSg}}, \code{\link{TALFs}}, \code{\link{list}},
-#'  \emph{\link[data.table:datatable-optimize]{GForce}}, \code{\link{cols}},
-#'  \code{\link{POSIXct}}
+#'  \code{\link{cols}}, \code{\link{POSIXct}},
+#'  \emph{\link[data.table:datatable-optimize]{GForce}}
 #'
 #' @examples
 #' # new DTSg object
@@ -94,12 +140,19 @@ NULL
 #' ## S3 method
 #' aggregate(x = x, funby = byY_____, fun = "mean", na.rm = TRUE)
 #'
-#' # standard deviation and variance of river flows per quarter
+#' # variance and standard deviation of river flows per quarter
 #' ## R6 method
-#' x$aggregate(funby = byYQ____, fun = c(sd = "sd", var = "var"), na.rm = TRUE)
+#' x$aggregate(funby = byYQ____, fun = c(var = "var", sd = "sd"), na.rm = TRUE)
 #'
 #' ## S3 method
-#' aggregate(x = x, funby = byYQ____, fun = c(sd = "sd", var = "var"), na.rm = TRUE)
+#' aggregate(x = x, funby = byYQ____, fun = c(var = "var", sd = "sd"), na.rm = TRUE)
+#'
+#' # mean of river flows of all first and second half years
+#' ## R6 method
+#' x$aggregate(funby = by_m____, fun = "mean", na.rm = TRUE, multiplier = 6)
+#'
+#' ## S3 method
+#' aggregate(x = x, funby = by_m____, fun = "mean", na.rm = TRUE, multiplier = 6)
 #'
 #' @aliases aggregate
 #'
@@ -113,8 +166,8 @@ alter <- function(x, ...) {
 }
 #' Alter Time Series
 #'
-#' Shortens, lengthens, subsets a complete range, changes the periodicity and/or
-#'  the status of missing values of a \code{\link{DTSg}} object.
+#' Shortens, lengthens, filters for a consecutive range, changes the periodicity
+#'  and/or the status of missing values of a \code{\link{DTSg}} object.
 #'
 #' @param x A \code{\link{DTSg}} object (S3 method only).
 #' @param from A \code{\link{POSIXct}} date with the same time zone as the time
@@ -147,7 +200,7 @@ alter <- function(x, ...) {
 #' # new DTSg object
 #' x <- DTSg$new(values = flow)
 #'
-#' # subset the first two years
+#' # filter for the first two years
 #' ## R6 method
 #' x$alter(from = "2007-01-01", to = "2008-12-31")
 #'
@@ -222,8 +275,6 @@ colapply <- function(x, ...) {
 #' @param fun A \code{\link{function}}. Its return value must be of length one.
 #' @param \dots Further arguments passed on to \code{fun}.
 #' @param cols A character vector specifying the columns to apply \code{fun} to.
-#' @param clone A logical specifying if the object is modified in place or if a
-#'  clone (copy) is made beforehand.
 #' @param resultCols An optional character vector of the same length as
 #'  \code{cols}. Non-existing columns specified in this argument are added and
 #'  existing columns are overwritten by the return values of \code{fun}. Columns
@@ -232,6 +283,8 @@ colapply <- function(x, ...) {
 #'  are added as new columns with names consisting of the columns specified in
 #'  \code{cols} and this suffix. Existing columns are never overwritten. Only
 #'  used when \code{resultCols} is not specified.
+#' @param helpers A logical specifying if helper data shall be handed over to
+#'  \code{fun}. See details for further information.
 #' @param funby One of the temporal aggregation level functions described in
 #'  \code{\link{TALFs}} or a user defined temporal aggregation level function.
 #'  Can be used to apply functions like \code{\link{cumsum}} to a certain
@@ -240,9 +293,16 @@ colapply <- function(x, ...) {
 #' @param ignoreDST A logical specifying if day saving time is ignored during
 #'  formation of the temporal level. See \code{\link{aggregate}} for further
 #'  information.
+#' @param multiplier A positive integerish value \dQuote{multiplying} the
+#'  temporal aggregation level of certain \code{\link{TALFs}}. See
+#'  \code{\link{aggregate}} for further information.
+#' @param funbyHelpers An optional \code{\link{list}} with helper data passed on
+#'  to \code{funby}. See \code{\link{aggregate}} for further information.
+#' @param clone A logical specifying if the object is modified in place or if a
+#'  clone (copy) is made beforehand.
 #'
 #' @details
-#' In addition to the \code{\dots} argument, this method hands over a
+#' In addition to the \code{\dots} argument, this method optionally hands over a
 #'  \code{\link{list}} argument with helper data called \code{.helpers} to
 #'  \code{fun}. \code{.helpers} contains the following named elements:
 #'  \itemize{
@@ -276,10 +336,10 @@ colapply <- function(x, ...) {
 #'
 #' # daily cumulative sums per month
 #' ## R6 method
-#' x$colapply(fun = function(x, ...) {cumsum(x)}, funby = byYm____)
+#' x$colapply(fun = cumsum, helpers = FALSE, funby = byYm____)
 #'
 #' ## S3 method
-#' colapply(x = x, fun = function(x, ...) {cumsum(x)}, funby = byYm____)
+#' colapply(x = x, fun = cumsum, helpers = FALSE, funby = byYm____)
 #'
 #' # calculate moving averages with the help of 'runner' (all four given
 #' # approaches provide the same result with explicitly missing timestamps)
@@ -338,7 +398,7 @@ colapply.DTSg <- S3WrapperGenerator(expression(DTSg$public_methods$colapply))
 cols <- function(x, ...) {
   UseMethod("cols", x)
 }
-#' Get Column Names
+#' Get Names of Value Columns
 #'
 #' Queries all column names of a \code{\link{DTSg}} object, those of certain
 #'  \code{\link{class}}es and/or those matching a certain pattern only.
@@ -413,7 +473,7 @@ getCol.DTSg <- S3WrapperGenerator(expression(DTSg$public_methods$getCol))
 `[.DTSg` <- S3WrapperGenerator(expression(DTSg$public_methods$`[`))
 
 #### merge ####
-#' Merge Two DTSg Objects
+#' Merge Two Objects
 #'
 #' Joins two \code{\link{DTSg}} objects based on their \emph{.dateTime} column.
 #'  Their time zones and \emph{aggregated} fields must be the same.
@@ -651,8 +711,6 @@ rollapply <- function(x, ...) {
 #'  further information.
 #' @param parameters A \code{\link{list}} specifying parameters for
 #'  \code{weights}. See details for further information.
-#' @param clone A logical specifying if the object is modified in place or if a
-#'  clone (copy) is made beforehand.
 #' @param resultCols An optional character vector of the same length as
 #'  \code{cols}. Non-existing columns specified in this argument are added and
 #'  existing columns are overwritten by the return values of \code{fun}. Columns
@@ -661,17 +719,21 @@ rollapply <- function(x, ...) {
 #'  are added as new columns with names consisting of the columns specified in
 #'  \code{cols} and this suffix. Existing columns are never overwritten. Only
 #'  used when \code{resultCols} is not specified.
+#' @param helpers A logical specifying if weights and helper data shall be
+#'  handed over to \code{fun}. See details for further information.
 #' @param memoryOverCPU A logical specifying if memory usage is preferred over
 #'  CPU usage for this method. The former is generally faster for smaller
 #'  windows and shorter time series, the latter for bigger windows and longer
 #'  time series or might even be the only way that works depending on the
 #'  available hardware.
+#' @param clone A logical specifying if the object is modified in place or if a
+#'  clone (copy) is made beforehand.
 #'
 #' @details
-#' In addition to the \code{\dots} argument, this method hands over the weights
-#'  as a numeric vector (\code{w} argument) and a \code{\link{list}} argument
-#'  with helper data called \code{.helpers} to \code{fun}. \code{.helpers}
-#'  contains the following named elements:
+#' In addition to the \code{\dots} argument, this method optionally hands over
+#'  the weights as a numeric vector (\code{w} argument) and a \code{\link{list}}
+#'  argument with helper data called \code{.helpers} to \code{fun}.
+#'  \code{.helpers} contains the following named elements:
 #'  \itemize{
 #'    \item \emph{before:} Same as \code{before} argument.
 #'    \item \emph{after:} Same as \code{after} argument.
@@ -711,12 +773,152 @@ rollapply <- function(x, ...) {
 #' @export
 rollapply.DTSg <- S3WrapperGenerator(expression(DTSg$public_methods$rollapply))
 
+#### rowaggregate ####
+#' @export
+rowaggregate <- function(x, ...) {
+  UseMethod("rowaggregate", x)
+}
+#' Aggregate Values Row-wise
+#'
+#' Applies one or more provided summary functions row-wise to selected columns
+#'  of a \code{\link{DTSg}} object.
+#'
+#' @param x A \code{\link{DTSg}} object (S3 method only).
+#' @param resultCols A character vector either of length one (names of
+#'  \code{fun} are appended in the case one or more functions are provided) or
+#'  the same length as \code{fun}.
+#' @param fun A summary function, (named) \code{\link{list}} of summary
+#'  functions or (named) character vector specifying summary functions applied
+#'  row-wise to all the values of the specified columns. The return value(s)
+#'  must be of length one. See details for further information.
+#' @param \dots Further arguments passed on to \code{fun}.
+#' @param cols A character vector specifying the columns to apply \code{fun} to.
+#' @param clone A logical specifying if the object is modified in place or if a
+#'  clone (copy) is made beforehand.
+#'
+#' @details
+#' Some examples for \code{fun} are as follows:
+#'  \itemize{
+#'    \item \code{\link{mean}}
+#'    \item \code{\link{list}(min = \link{min}, max = \link{max})}
+#'    \item \code{c(sd = "\link{sd}", var = "\link{var}")}
+#'  }
+#'  A list or character vector must have names in case more than one summary
+#'  function is provided.
+#'
+#' @return Returns a \code{\link{DTSg}} object.
+#'
+#' @seealso \code{\link{DTSg}}, \code{\link{list}}, \code{\link{cols}}
+#'
+#' @examples
+#' # new DTSg object
+#' DT <- data.table::data.table(
+#'   date = flow$date,
+#'   flow1 = flow$flow - rnorm(nrow(flow)),
+#'   flow2 = flow$flow,
+#'   flow3 = flow$flow + rnorm(nrow(flow))
+#' )
+#' x <- DTSg$new(values = DT)
+#'
+#' # mean and standard deviation of multiple measurements per timestamp
+#' ## R6 method
+#' x$rowaggregate(resultCols = "flow", fun = list(mean = mean, sd = sd))
+#'
+#' ## S3 method
+#' rowaggregate(x = x, resultCols = "flow", fun = list(mean = mean, sd = sd))
+#'
+#' @aliases rowaggregate
+#'
+#' @export
+rowaggregate.DTSg <- S3WrapperGenerator(expression(DTSg$public_methods$rowaggregate))
+
+#### rowbind ####
+#' @export
+rowbind <- function(x, ...) {
+  UseMethod("rowbind", x)
+}
+#' Combine Rows
+#'
+#' Combines the rows of \code{\link{DTSg}} and other suitable objects.
+#'
+#' @param x A \code{\link{DTSg}} object (S3 method only).
+#' @param \dots Any number of \code{\link{DTSg}} objects or objects coercible to
+#'  one (see \code{\link{new}} for further information). \code{\link{list}}s of
+#'  such objects or a mixture of lists and non-lists are also accepted.
+#' @param clone A logical specifying if the object is modified in place or if a
+#'  clone (copy) is made beforehand.
+#'
+#' @return Returns a \code{\link{DTSg}} object.
+#'
+#' @seealso \code{\link{DTSg}}, \code{\link{new}}, \code{\link{list}}
+#'
+#' @examples
+#' # new DTSg object
+#' x <- DTSg$new(values = flow[1:500, ])
+#'
+#' # combine rows
+#' ## R6 method
+#' x$rowbind(
+#'   list(flow[1001:1500, ], DTSg$new(values = flow[501:1000, ])),
+#'   flow[1501:.N, ]
+#' )
+#'
+#' ## S3 method
+#' rowbind(
+#'   x = x,
+#'   list(flow[1001:1500, ], DTSg$new(values = flow[501:1000, ])),
+#'   flow[1501:.N, ]
+#' )
+#'
+#' @aliases rowbind
+#'
+#' @export
+rowbind.DTSg <- S3WrapperGenerator(expression(DTSg$public_methods$rowbind))
+
+#### setColNames ####
+#' @export
+setColNames <- function(x, ...) {
+  UseMethod("setColNames", x)
+}
+#' Set Names of Value Columns
+#'
+#' Set the names of columns of \code{\link{DTSg}} objects.
+#'
+#' @param x A \code{\link{DTSg}} object (S3 method only).
+#' @param cols A character vector specifying the columns whose names shall be
+#'  set. The name of the \emph{.dateTime} column cannot be set.
+#' @param values A character vector of the same length as \code{cols} specifying
+#'  the desired names.
+#' @param clone A logical specifying if the object is modified in place or if a
+#'  clone (copy) is made beforehand.
+#' @param \dots Not used (S3 method only).
+#'
+#' @return Returns a \code{\link{DTSg}} object.
+#'
+#' @seealso \code{\link{DTSg}}, \code{\link{cols}}
+#'
+#' @examples
+#' # new DTSg object
+#' x <- DTSg$new(values = flow)
+#'
+#' # rename column "flow" to "River Flow"
+#' ## R6 method
+#' x$setColNames(cols = "flow", values = "River Flow")
+#'
+#' ## S3 method
+#' setColNames(x = x, cols = "flow", values = "River Flow")
+#'
+#' @aliases setColNames
+#'
+#' @export
+setColNames.DTSg <- S3WrapperGenerator(expression(DTSg$public_methods$setColNames))
+
 #### setCols ####
 #' @export
 setCols <- function(x, ...) {
   UseMethod("setCols", x)
 }
-#' Set Columns' Values
+#' Set Values of Columns
 #'
 #' Set the values of columns, add columns to and/or remove columns from a
 #'  \code{\link{DTSg}} object. The values can optionally be set for certain rows
@@ -761,7 +963,7 @@ setCols <- function(x, ...) {
 setCols.DTSg <- S3WrapperGenerator(expression(DTSg$public_methods$setCols))
 
 #### subset ####
-#' Subset Time Series
+#' Time Series Subset
 #'
 #' Filter rows and/or select columns of a \code{\link{DTSg}} object.
 #'
@@ -783,15 +985,23 @@ setCols.DTSg <- S3WrapperGenerator(expression(DTSg$public_methods$setCols))
 #' @param na.status A character string. Either \code{"explicit"}, which makes
 #'  missing timestamps according to the recognised periodicity explicit, or
 #'  \code{"implicit"}, which removes timestamps with missing values on all value
-#'  columns. Please note that filtering rows and having or making missing
-#'  timestamps explicit equals to setting the values of all other timestamps to
-#'  missing. Its default value is therefore \code{"implicit"}. To simply subset
-#'  a complete range of a \code{\link{DTSg}} object while leaving
-#'  \code{na.status} untouched, \code{\link{alter}} is probably the better
-#'  choice.
+#'  columns. See details for further information.
 #' @param clone A logical specifying if the object is modified in place or if a
 #'  clone (copy) is made beforehand.
+#' @param multiplier A positive integerish value \dQuote{multiplying} the
+#'  temporal aggregation level of certain \code{\link{TALFs}}. See
+#'  \code{\link{aggregate}} for further information.
+#' @param funbyHelpers An optional \code{\link{list}} with helper data passed on
+#'  to \code{funby}. See \code{\link{aggregate}} for further information.
 #' @param \dots Not used (S3 method only).
+#'
+#' @details
+#' Please note that filtering rows and having or making missing timestamps
+#'  explicit equals to setting the values of all other timestamps to missing.
+#'  The default value of \code{na.status} is therefore \code{"implicit"}. To
+#'  simply filter for a consecutive range of a \code{\link{DTSg}} object while
+#'  leaving \code{na.status} untouched, \code{\link{alter}} is probably the
+#'  better choice.
 #'
 #' @return Returns a \code{\link{DTSg}} object.
 #'
@@ -803,19 +1013,19 @@ setCols.DTSg <- S3WrapperGenerator(expression(DTSg$public_methods$setCols))
 #' # new DTSg object
 #' x <- DTSg$new(values = flow)
 #'
-#' # filter for the last six rows
+#' # filter for the first six rows
 #' ## R6 method
-#' x$subset(i = (.N - 5):.N)
+#' x$subset(i = 1:6)
 #'
 #' ## S3 method
-#' subset(x = x, i = (.N - 5):.N)
+#' subset(x = x, i = 1:6)
 #'
-#' # filter for the first two observations per year
+#' # filter for the last two observations per year
 #' ## R6 method
-#' x$subset(i = 1:2, funby = function(x, ...) {data.table::year(x)})
+#' x$subset(i = (.N - 1):.N, funby = function(x, ...) {data.table::year(x)})
 #'
 #' ## S3 method
-#' subset(x = x, i = 1:2, funby = function(x, ...) {data.table::year(x)})
+#' subset(x = x, i = (.N - 1):.N, funby = function(x, ...) {data.table::year(x)})
 #'
 #' @aliases subset
 #'

@@ -14,10 +14,11 @@
   after = before,
   weights = c("inverseDistance"),
   parameters = list(power = 1),
-  clone = getOption("DTSgClone"),
   resultCols = NULL,
   suffix = NULL,
-  memoryOverCPU = TRUE
+  helpers = TRUE,
+  memoryOverCPU = TRUE,
+  clone = getOption("DTSgClone")
 )
 }
 \arguments{
@@ -43,9 +44,6 @@ further information.}
 \item{parameters}{A \code{\link{list}} specifying parameters for
 \code{weights}. See details for further information.}
 
-\item{clone}{A logical specifying if the object is modified in place or if a
-clone (copy) is made beforehand.}
-
 \item{resultCols}{An optional character vector of the same length as
 \code{cols}. Non-existing columns specified in this argument are added and
 existing columns are overwritten by the return values of \code{fun}. Columns
@@ -56,11 +54,17 @@ are added as new columns with names consisting of the columns specified in
 \code{cols} and this suffix. Existing columns are never overwritten. Only
 used when \code{resultCols} is not specified.}
 
+\item{helpers}{A logical specifying if weights and helper data shall be
+handed over to \code{fun}. See details for further information.}
+
 \item{memoryOverCPU}{A logical specifying if memory usage is preferred over
 CPU usage for this method. The former is generally faster for smaller
 windows and shorter time series, the latter for bigger windows and longer
 time series or might even be the only way that works depending on the
 available hardware.}
+
+\item{clone}{A logical specifying if the object is modified in place or if a
+clone (copy) is made beforehand.}
 }
 \value{
 Returns a \code{\link{DTSg}} object.
@@ -70,10 +74,10 @@ Applies an arbitrary function to a rolling window of selected columns of a
  \code{\link{DTSg}} object with recognised periodicity.
 }
 \details{
-In addition to the \code{\dots} argument, this method hands over the weights
- as a numeric vector (\code{w} argument) and a \code{\link{list}} argument
- with helper data called \code{.helpers} to \code{fun}. \code{.helpers}
- contains the following named elements:
+In addition to the \code{\dots} argument, this method optionally hands over
+ the weights as a numeric vector (\code{w} argument) and a \code{\link{list}}
+ argument with helper data called \code{.helpers} to \code{fun}.
+ \code{.helpers} contains the following named elements:
  \itemize{
    \item \emph{before:} Same as \code{before} argument.
    \item \emph{after:} Same as \code{after} argument.

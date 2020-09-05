@@ -13,6 +13,8 @@
   cols = self$cols(class = "numeric"),
   n = FALSE,
   ignoreDST = FALSE,
+  multiplier = 1L,
+  funbyHelpers = NULL,
   clone = getOption("DTSgClone")
 )
 }
@@ -23,15 +25,10 @@
 \code{\link{TALFs}} or a user defined temporal aggregation level function.
 See details for further information.}
 
-\item{fun}{A summary function, \code{\link{list}} of summary functions or
-character vector specifying summary functions applied column-wise to all the
-values of the same temporal aggregation level, for instance,
-\code{\link{mean}}, \code{\link{list}(min = \link{min}, max = \link{max})}
-or \code{c(sd = "\link{sd}", var = "\link{var}")}. A list or character
-vector must have names in case more than one summary function is provided.
-The method can benefit from \pkg{data.table}'s
-\emph{\link[data.table:datatable-optimize]{GForce}} optimisation in case a
-character vector is used. The return value(s) must be of length one.}
+\item{fun}{A summary function, (named) \code{\link{list}} of summary
+functions or (named) character vector specifying summary functions applied
+column-wise to all the values of the same temporal aggregation level. The
+return value(s) must be of length one. See details for further information.}
 
 \item{\dots}{Further arguments passed on to \code{fun}.}
 
@@ -43,6 +40,13 @@ information.}
 
 \item{ignoreDST}{A logical specifying if day saving time is ignored during
 aggregation. See details for further information.}
+
+\item{multiplier}{A positive integerish value \dQuote{multiplying} the
+temporal aggregation level of certain \code{\link{TALFs}}. See details for
+further information.}
+
+\item{funbyHelpers}{An optional \code{\link{list}} with helper data passed on
+to \code{funby}. See details for further information.}
 
 \item{clone}{A logical specifying if the object is modified in place or if a
 clone (copy) is made beforehand.}
@@ -61,8 +65,8 @@ Applies a temporal aggregation level function to the \emph{.dateTime} column
 User defined temporal aggregation level functions have to return a
  \code{\link{POSIXct}} vector of the same length as the time series and
  accept two arguments: a \code{\link{POSIXct}} vector as its first and a
- \code{\link{list}} with helper data as its second. This \code{\link{list}}
- in turn contains the following named elements:
+ \code{\link{list}} with helper data as its second. The default elements of
+ this \code{\link{list}} are as follows:
  \itemize{
    \item \emph{timezone:} Same as \emph{timezone} field. See
      \code{\link{DTSg}} for further information.
@@ -71,7 +75,24 @@ User defined temporal aggregation level functions have to return a
      \code{\link{DTSg}} for further information.
    \item \emph{na.status:} Same as \emph{na.status} field. See
      \code{\link{DTSg}} for further information.
+   \item \emph{multiplier:} Same as \code{multiplier} argument.
  }
+ Any additional element specified in the \code{funbyHelpers} argument is
+  appended to the end of the \code{\link{list}}. In case \code{funbyHelpers}
+  contains a \emph{ignoreDST} or \emph{multiplier} element, it takes
+  precedence over the respective method argument. A \emph{timezone},
+  \emph{periodicity} or \emph{na.status} element is rejected.
+
+Some examples for \code{fun} are as follows:
+ \itemize{
+   \item \code{\link{mean}}
+   \item \code{\link{list}(min = \link{min}, max = \link{max})}
+   \item \code{c(sd = "\link{sd}", var = "\link{var}")}
+ }
+ A list or character vector must have names in case more than one summary
+ function is provided. The method can benefit from \pkg{data.table}'s
+ \emph{\link[data.table:datatable-optimize]{GForce}} optimisation in case a
+ character vector specifying summary functions is provided.
 
 Depending on the number of columns to aggregate, the \emph{.n} column
  contains different counts:
@@ -91,7 +112,7 @@ Depending on the number of columns to aggregate, the \emph{.n} column
  possible limitation might be that the day saving time shift is invariably
  assumed to be exactly one hour long. This feature requires that the
  periodicity of the time series is recognised and is supported by the
- following temporal aggregation level functions of the package:
+ following \code{\link{TALFs}} of the package:
  \itemize{
    \item \code{\link{byY_____}}
    \item \code{\link{byYQ____}}
@@ -100,6 +121,35 @@ Depending on the number of columns to aggregate, the \emph{.n} column
    \item \code{\link{by_Q____}}
    \item \code{\link{by_m____}}
    \item \code{\link{by___H__}}
+ }
+
+The temporal aggregation level of certain \code{\link{TALFs}} can be adjusted
+ with the help of the \code{multiplier} argument. A \code{multiplier} of
+ \code{10}, for example, makes \code{\link{byY_____}} aggregate to decades
+ instead of years. Another example is a \code{multiplier} of \code{6}
+ provided to \code{\link{by_m____}}. The function then aggregates all months
+ of all first and all months of all second half years instead of all months
+ of all years separately. This feature is supported by the following
+ \code{\link{TALFs}} of the package:
+ \itemize{
+   \item \code{\link{byFasttimeY_____}}
+   \item \code{\link{byFasttimeYm____}}
+   \item \code{\link{byFasttimeYmdH__}}
+   \item \code{\link{byFasttimeYmdHM_}}
+   \item \code{\link{byFasttimeYmdHMS}}
+   \item \code{\link{byFasttime_m____}}
+   \item \code{\link{byFasttime___H__}}
+   \item \code{\link{byFasttime____M_}}
+   \item \code{\link{byFasttime_____S}}
+   \item \code{\link{byY_____}}
+   \item \code{\link{byYm____}}
+   \item \code{\link{byYmdH__}} (UTC and equivalent as well as all Etc/GMT only)
+   \item \code{\link{byYmdHM_}}
+   \item \code{\link{byYmdHMS}}
+   \item \code{\link{by_m____}}
+   \item \code{\link{by___H__}} (UTC and equivalent as well as all Etc/GMT only)
+   \item \code{\link{by____M_}}
+   \item \code{\link{by_____S}}
  }
 }
 \examples{
@@ -113,16 +163,23 @@ x$aggregate(funby = byY_____, fun = "mean", na.rm = TRUE)
 ## S3 method
 aggregate(x = x, funby = byY_____, fun = "mean", na.rm = TRUE)
 
-# standard deviation and variance of river flows per quarter
+# variance and standard deviation of river flows per quarter
 ## R6 method
-x$aggregate(funby = byYQ____, fun = c(sd = "sd", var = "var"), na.rm = TRUE)
+x$aggregate(funby = byYQ____, fun = c(var = "var", sd = "sd"), na.rm = TRUE)
 
 ## S3 method
-aggregate(x = x, funby = byYQ____, fun = c(sd = "sd", var = "var"), na.rm = TRUE)
+aggregate(x = x, funby = byYQ____, fun = c(var = "var", sd = "sd"), na.rm = TRUE)
+
+# mean of river flows of all first and second half years
+## R6 method
+x$aggregate(funby = by_m____, fun = "mean", na.rm = TRUE, multiplier = 6)
+
+## S3 method
+aggregate(x = x, funby = by_m____, fun = "mean", na.rm = TRUE, multiplier = 6)
 
 }
 \seealso{
 \code{\link{DTSg}}, \code{\link{TALFs}}, \code{\link{list}},
- \emph{\link[data.table:datatable-optimize]{GForce}}, \code{\link{cols}},
- \code{\link{POSIXct}}
+ \code{\link{cols}}, \code{\link{POSIXct}},
+ \emph{\link[data.table:datatable-optimize]{GForce}}
 }

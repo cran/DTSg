@@ -91,9 +91,9 @@ Some of the methods which take a function as an argument
  additional \code{\link{list}} argument called \code{.helpers} containing
  useful data for the development of user defined functions (see the
  respective help pages for further information). This can of course be a
- problem for functions like \code{\link{sum}} which do not expect such a
- thing. A solution is to wrap it in an anonymous function with a
- \code{\dots} parameter like this: \code{function(x, ...) sum(x)}.
+ problem for functions like \code{\link{cumsum}} which do not expect such a
+ thing. A solution is to set the \code{helpers} argument of the respective
+ method to \code{FALSE}.
 }
 \section{Methods}{
 
@@ -112,6 +112,11 @@ A \code{DTSg} object has the following methods:
    \item \code{print}: See \code{\link{print}} for further information.
    \item \code{refresh}: See \code{\link{refresh}} for further information.
    \item \code{rollapply}: See \code{\link{rollapply}} for further
+     information.
+   \item \code{rowaggregate}: See \code{\link{rowaggregate}} for further
+     information.
+   \item \code{rowbind}: See \code{\link{rowbind}} for further information.
+   \item \code{setColNames}: See \code{\link{setColNames}} for further
      information.
    \item \code{setCols}: See \code{\link{setCols}} for further information.
    \item \code{subset}: See \code{\link{subset}} for further information.
@@ -157,11 +162,12 @@ A \code{DTSg} object has the following fields or properties as they are often
    \item \emph{unit:} Same as \code{unit} argument. It is added to the label
      of the primary axis of plots when the \emph{parameter} field is set.
    \item \emph{variant:} Same as \code{variant} argument. It is added to the
-     label of the primary axis of plots when the \emph{parameter} field is set.
+     label of the primary axis of plots when the \emph{parameter} field is
+     set.
  }
 
 The \emph{parameter}, \emph{unit} and \emph{variant} fields are especially
- useful for time series with one variable (value column) only.
+ useful for time series with a single variable (value column) only.
 }
 
 \section{Options}{

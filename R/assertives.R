@@ -8,8 +8,12 @@ assertFasttimeOK <- function(.dateTime, .helpers) {
       call. = FALSE
     )
   }
-  if (.helpers[["timezone"]] != "UTC") {
-    stop('Time zone must be "UTC" for this TALF.', call. = FALSE)
+  if (!grepl(
+    "^(Etc/)?(UCT|UTC)$|^(Etc/)?GMT(\\+|-)?0?$",
+    .helpers[["timezone"]],
+    ignore.case = TRUE
+  )) {
+    stop('Time zone must be "UTC" or equivalent for this TALF.', call. = FALSE)
   }
 
   invisible(TRUE)
@@ -55,10 +59,10 @@ assertNAstatusPeriodicityOK <- function(
   invisible(TRUE)
 }
 
-assertNoBeginningDot <- function(x) {
-  if (any(grepl("^\\.", x))) {
+assertNoStartingDot <- function(x) {
+  if (any(startsWith(x, "."))) {
     stop(
-      sprintf('"%s" must not begin with a ".".', deparse(substitute(x))),
+      sprintf('"%s" must not start with a ".".', deparse(substitute(x))),
       call. = FALSE
     )
   }

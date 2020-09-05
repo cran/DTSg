@@ -2,30 +2,30 @@ source("data.R")
 
 #### aggregate method ####
 expect_identical(
-  DTSg$new(DT1)$aggregate(byYmdH__, mean)$values(TRUE),
+  DTSg$new(DT1)$aggregate(byYmdH__, list(mean = mean))$values(TRUE),
   data.table(
     .dateTime = seq(
       as.POSIXct("2000-10-29 01:00:00", tz = "Europe/Vienna"),
       as.POSIXct("2000-10-29 03:30:00", tz = "Europe/Vienna"),
       "1 hour"
     ),
-    col1 = c( 2, 6, 10, 14),
-    col2 = c(NA, 6, 10, 14),
+    col1.mean = c( 2, 6, 10, 14),
+    col2.mean = c(NA, 6, 10, 14),
     key = ".dateTime"
   ),
   info = "values are aggregated correctly (multiple columns and single function)"
 )
 
 expect_identical(
-  DTSg$new(DT1)$aggregate(byYmdH__, "mean")$values(TRUE),
+  DTSg$new(DT1)$aggregate(byYmdH__, c(mean = "mean"))$values(TRUE),
   data.table(
     .dateTime = seq(
       as.POSIXct("2000-10-29 01:00:00", tz = "Europe/Vienna"),
       as.POSIXct("2000-10-29 03:30:00", tz = "Europe/Vienna"),
       "1 hour"
     ),
-    col1 = c( 2, 6, 10, 14),
-    col2 = c(NA, 6, 10, 14),
+    col1.mean = c( 2, 6, 10, 14),
+    col2.mean = c(NA, 6, 10, 14),
     key = ".dateTime"
   ),
   info = "values are aggregated correctly (multiple columns and single character function)"
@@ -80,7 +80,7 @@ expect_identical(
 )
 
 expect_identical(
-  DTSg$new(DT1)$aggregate(byYmdH__, mean, na.rm = TRUE)$values(TRUE)[["col2"]],
+  DTSg$new(DT1)$aggregate(byYmdH__, list(mean), na.rm = TRUE)$values(TRUE)[["col2"]],
   c(1, 6, 10, 14),
   info = '"..." passes on arguments correctly (single function)'
 )
@@ -109,6 +109,45 @@ expect_identical(
   )$values(TRUE)[["col2.sum"]],
   c(1, 12, 20, 28),
   info = '"..." passes on arguments correctly (multiple character functions)'
+)
+
+expect_error(
+  DTSg$new(DT1)$aggregate(byYmdH__, list(mean = mean, sum)),
+  info = 'single missing "fun" name returns error'
+)
+
+expect_error(
+  DTSg$new(DT1)$aggregate(byYmdH__, c("mean", "sum")),
+  info = 'missing "fun" names return error'
+)
+
+expect_true(
+  all(DTSg$new(UTChourlyData)$aggregate(
+    byYmdH__,
+    length,
+    multiplier = 1L,
+    funbyHelpers = list(multiplier = 2L)
+  )$values(TRUE)[["value"]] == 2L),
+  info = '"funbyHelpers" takes precedence over "multiplier"'
+)
+
+expect_true(
+  all(DTSg$new(CEThourlyData)$aggregate(
+    byYmd___,
+    length,
+    ignoreDST = FALSE,
+    funbyHelpers = list(ignoreDST = TRUE)
+  )$values(TRUE)[["value"]] == 24L),
+  info = '"funbyHelpers" takes precedence over "ignoreDST"'
+)
+
+expect_error(
+  DTSg$new(DT1)$aggregate(
+    byYmdH__,
+    length,
+    funbyHelpers = list(periodicity = "1 hour")
+  ),
+  info = "use of helper data not allowed returns error"
 )
 
 expect_true(
@@ -209,9 +248,15 @@ expect_identical(
     TS <- DTSg$new(DT1)
     TS$aggregate(byYmdH__, mean)
     TS$alter(by = "1 hour")
-    TS$colapply(function(x, ...) {as.factor(x)})
+    TS$colapply(as.factor, helpers = FALSE)
     TS$merge(DT2)
     TS$rollapply(weighted.mean, na.rm = TRUE)
+    TS$rowaggregate("col", sum, na.rm = TRUE)
+    TS$rowbind(data.table(
+      date = as.POSIXct("2000-10-29 04:00:00", tz = "Europe/Vienna"),
+      col1 = 17
+    ))
+    TS$setColNames("col1", "col4")
     TS$setCols(values = 1)
     TS$subset(1L)
     TS
@@ -223,8 +268,9 @@ expect_identical(
 #### colapply method ####
 expect_identical(
   DTSg$new(DT1)$colapply(
-    function(x, ...) {as.factor(x)},
-    cols = c("col1", "col2")
+    as.factor,
+    cols = c("col1", "col2"),
+    helpers = FALSE
   )$cols("factor"),
   c("col1", "col2"),
   info = '"fun" is applied correctly'
@@ -263,12 +309,24 @@ expect_identical(
 
 expect_identical(
   DTSg$new(DT1)$colapply(
-    function(x, ...) {cumsum(x)},
+    cumsum,
     cols = "col2",
+    helpers = FALSE,
     funby = byYmdH__
   )$values(TRUE)[["col2"]],
   c(1, NA, 5, 12, 9, 20, 13, 28),
   info = '"funby" is applied correctly'
+)
+
+expect_identical(
+  DTSg$new(DT1[, .(date, col1, col2, col3 = "A")])$colapply(
+    cumsum,
+    helpers = FALSE,
+    funby = function(x, .helpers) {.helpers[["custom"]]},
+    funbyHelpers = list(custom = "col3")
+  )$values(TRUE)[["col1"]],
+  cumsum(DT1[["col1"]]),
+  info = "custom helper data is appended correctly"
 )
 
 #### cols method ####
@@ -336,6 +394,12 @@ expect_identical(
 )
 
 #### initialize method ####
+expect_identical(
+  DTSg$new(as.data.frame(DT1))$values(),
+  setkey(DT1, "date"),
+  info = "data.frame is coerced"
+)
+
 expect_error(
   DTSg$new(data.table(date = numeric(0L), col1 = integer(0L))),
   info = "data.table without a single row returns error"
@@ -352,7 +416,7 @@ expect_true(
 )
 
 expect_true(
-  DTSg$new(DT1, fast = TRUE)$fast,
+  DTSg$new(UTChourlyData, fast = TRUE)$fast,
   info = '"fast" field is set correctly'
 )
 
@@ -449,14 +513,13 @@ expect_identical(
 )
 
 #### plot and print methods ####
-expect_true(
+expect_silent(
   {
     TS <- DTSg$new(DT1, "id", "parameter", "unit", "variant")
     TS$plot(secAxisCols = "col2", secAxisLabel = "y2")
     TS$print()
-    TRUE
   },
-  info = '"plot" and "print" work'
+  info = '"plot" and "print" do not throw an error or warning'
 )
 
 #### refresh method ####
@@ -473,6 +536,12 @@ expect_warning(
 expect_error(
   DTSg$new(data.table(date = .POSIXct(NA_real_), col1 = pi)),
   info = "data.table with a single row and missing timestamp returns error"
+)
+
+expect_identical(
+  names(DTSg$new(DT1[1L, ])$values(TRUE))[1L],
+  ".dateTime",
+  info = "data.table with a single row ends up with .dateTime column"
 )
 
 expect_error(
@@ -569,9 +638,10 @@ expect_identical(
 #### rollapply method ####
 expect_identical(
   DTSg$new(DT1)$rollapply(
-    function(x, ...) {sum(x)},
+    sum,
     before = 2L,
     after = 1L,
+    helpers = FALSE,
     memoryOverCPU = TRUE
   )$values(TRUE)[["col1"]],
   c(NA, NA, 16, 24, 32, 40, 48, NA),
@@ -580,9 +650,10 @@ expect_identical(
 
 expect_identical(
   DTSg$new(DT1)$rollapply(
-    function(x, ...) {sum(x)},
+    sum,
     before = 2L,
     after = 1L,
+    helpers = FALSE,
     memoryOverCPU = FALSE
   )$values(TRUE)[["col1"]],
   c(NA, NA, 16, 24, 32, 40, 48, NA),
@@ -644,7 +715,7 @@ expect_identical(
     memoryOverCPU = TRUE
   )$values(TRUE)[["col1"]][3L],
   {
-    weights <- 1 / c(rev(seq_len(2) + 1), 1, seq_len(1) + 1)^1
+    weights <- 1 / c(rev(seq_len(2L) + 1), 1, seq_len(1L) + 1)^1
     weights <- weights / sum(weights)
     weighted.mean(DT1[["col1"]][1:4], weights, na.rm = TRUE)
   },
@@ -661,7 +732,7 @@ expect_identical(
     memoryOverCPU = FALSE
   )$values(TRUE)[["col1"]][3L],
   {
-    weights <- 1 / c(rev(seq_len(2) + 1), 1, seq_len(1) + 1)^2
+    weights <- 1 / c(rev(seq_len(2L) + 1), 1, seq_len(1L) + 1)^2
     weights <- weights / sum(weights)
     weighted.mean(DT1[["col1"]][1:4], weights, na.rm = TRUE)
   },
@@ -670,11 +741,12 @@ expect_identical(
 
 expect_identical(
   DTSg$new(DT1)$rollapply(
-    function(x, ...) {identity(x)},
+    identity,
     before = 0L,
     cols = c("col1", "col2"),
     resultCols = c("col1", "col4"),
-    suffix = "_character"
+    suffix = "_character",
+    helpers = FALSE
   )$cols(),
   c("col1", "col2", "col3", "col4"),
   info = '"resultCols" adds and overwrites columns correctly'
@@ -682,13 +754,126 @@ expect_identical(
 
 expect_identical(
   DTSg$new(DT1)$rollapply(
-    function(x, ...) {identity(x)},
+    identity,
     before = 0L,
     cols = c("col1", "col2"),
-    suffix = "_identity"
+    suffix = "_identity",
+    helpers = FALSE
   )$cols(),
   c("col1", "col2", "col3", "col1_identity", "col2_identity"),
   info = '"suffix" adds columns correctly'
+)
+
+#### rowaggregate method ####
+expect_identical(
+  DTSg$new(DT1)$rowaggregate("col", list(sum = sum))$values(TRUE),
+  setkey(
+    DT1[, .(.dateTime = date, col1, col2, col3, col.sum = col1 + col2)],
+    ".dateTime"
+  ),
+  info = "values are aggregated correctly (single function)"
+)
+
+expect_identical(
+  DTSg$new(DT1)$rowaggregate("col", c(sum = "sum"))$values(TRUE),
+  setkey(
+    DT1[, .(.dateTime = date, col1, col2, col3, col.sum = col1 + col2)],
+    ".dateTime"
+  ),
+  info = "values are aggregated correctly (single character function)"
+)
+
+expect_identical(
+  DTSg$new(DT1)$rowaggregate(c("colmean", "colsum"), list(mean = mean, sum = sum))$values(TRUE),
+  setkey(
+    DT1[, .(.dateTime = date, col1, col2, col3, colmean = (col1 + col2) / 2, colsum = col1 + col2)],
+    ".dateTime"
+  ),
+  info = "values are aggregated correctly (multiple functions)"
+)
+
+expect_identical(
+  DTSg$new(DT1)$rowaggregate("col", c(mean = "mean", sum = "sum"))$values(TRUE),
+  setkey(
+    DT1[, .(.dateTime = date, col1, col2, col3, col.mean = (col1 + col2) / 2, col.sum = col1 + col2)],
+    ".dateTime"
+  ),
+  info = "values are aggregated correctly (multiple character functions)"
+)
+
+expect_identical(
+  DTSg$new(DT1)$rowaggregate("col", list(sum), na.rm = TRUE)$values(TRUE)[["col"]],
+  c(2, 3, seq(10, 30, 4)),
+  info = '"..." passes on arguments correctly (single function)'
+)
+
+expect_identical(
+  DTSg$new(DT1)$rowaggregate("col", "sum", na.rm = TRUE)$values(TRUE)[["col"]],
+  c(2, 3, seq(10, 30, 4)),
+  info = '"..." passes on arguments correctly (single character function)'
+)
+
+expect_identical(
+  DTSg$new(DT1)$rowaggregate("col", list(mean = mean, sum = sum), na.rm = TRUE)$values(TRUE)[["col.sum"]],
+  c(2, 3, seq(10, 30, 4)),
+  info = '"..." passes on arguments correctly (multiple functions)'
+)
+
+expect_identical(
+  DTSg$new(DT1)$rowaggregate(c("colmean", "colsum"), c(mean = "mean", sum = "sum"), na.rm = TRUE)$values(TRUE)[["colsum"]],
+  c(2, 3, seq(10, 30, 4)),
+  info = '"..." passes on arguments correctly (multiple character functions)'
+)
+
+expect_error(
+  DTSg$new(DT1)$rowaggregate(c("colmean", "col1"), list(mean = mean, sum = sum)),
+  info = 'existing "resultCols" return error'
+)
+
+expect_error(
+  DTSg$new(DT1)$rowaggregate("col", list(mean, sum)),
+  info = 'missing "fun" names return error'
+)
+
+expect_error(
+  DTSg$new(DT1)$rowaggregate("col", c("mean", sum = "sum")),
+  info = 'single missing "fun" name returns error'
+)
+
+#### rowbind method ####
+expect_identical(
+  DTSg$new(DT1[1:2, ])$rowbind(
+    setnames(DT1[3:4, ], "col3", "col4"),
+    list(DTSg$new(DT1[5:6, -"col3"]), DT1[7:8, ])
+  )$values(),
+  setkey(DT1[, .(
+    date, col1, col2,
+    col3 = c("A", "B", rep(NA, 4), "G", "H"),
+    col4 = c(NA , NA , "C", "D", rep(NA, 4))
+  )], "date"),
+  info = "rows are bound correctly"
+)
+
+expect_error(
+  DTSg$new(DT1)$rowbind(DT1),
+  info = "duplicated timestamps return error"
+)
+
+#### setColNames method ####
+expect_identical(
+  DTSg$new(DT1)$setColNames(c("col2", "col3"), c("column2", "column3"))$cols(),
+  c("col1", "column2", "column3"),
+  info = "column names are set correctly"
+)
+
+expect_error(
+  DTSg$new(DT1)$setColNames("col2", ""),
+  info = "blank column name returns error"
+)
+
+expect_error(
+  DTSg$new(DT1)$setColNames("col2", ".column2"),
+  info = "column name with a starting dot returns error"
 )
 
 #### setCols method ####
@@ -799,7 +984,7 @@ expect_error(
 
 expect_error(
   DTSg$new(DT1)$subset(, ""),
-  info = '"empty" selection returns error'
+  info = "blank selection returns error"
 )
 
 #### summary method ####
