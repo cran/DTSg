@@ -13,13 +13,15 @@ TS
 
 ## -----------------------------------------------------------------------------
 TS$alter("2007-01-01", "2008-12-31")
-# end date is still in the year 2012
+# `TS` was deep cloned before shortening it, hence its end date is still in the
+# year 2012
 TS
 
 options(DTSgClone = FALSE)
 getOption("DTSgClone")
+# `TS` was modified in place this time, hence its end date is in the year 2008
+# now
 TS$alter("2007-01-01", "2008-12-31")
-# end date is in the year 2008 now
 TS
 
 ## -----------------------------------------------------------------------------
@@ -60,25 +62,26 @@ DT <- TS$values(drop = TRUE)
 ls(pattern = "^TS$")
 
 ## -----------------------------------------------------------------------------
-# add a column recording if a certain value has been interpolated or not before
-# carrying out the interpolation
+# add a new column recording if a certain value is missing or not before
+# carrying out a linear interpolation
 TS <- DTSg$new(flow)
 TS$summary()
 TS$
   colapply(
     function(x, ...) {ifelse(is.na(x), TRUE, FALSE)},
-    resultCols = "interpolated"
+    resultCols = "missing"
   )$
   colapply(interpolateLinear)$
   summary()
 
-# undo the interpolation (requires additional access to the interpolated column
-# which is accomplished with the help of the getCol method or its shortcut [ and
-# the freely chosen y argument)
+# undo the linear interpolation (requires additional access to the previously
+# created column named "missing", which can be carried out with the help of the
+# `getCol` method or its shortcut, the `[` operator, and the freely chosen `y`
+# argument)
 TS$
   colapply(
     function(x, y, ...) {ifelse(y, NA, x)},
-    y = TS$getCol("interpolated") # or 'y = TS["interpolated"]'
+    y = TS$getCol("missing") # or 'y = TS["missing"]'
   )$
   summary()
 

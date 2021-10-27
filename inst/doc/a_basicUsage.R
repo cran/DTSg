@@ -13,10 +13,17 @@ flow
 summary(flow)
 
 ## -----------------------------------------------------------------------------
-TS <- DTSg$new(values = flow, ID = "River Flow")
+TS <- DTSg$new(
+  values = flow,
+  ID = "River Flow"
+)
 
 ## -----------------------------------------------------------------------------
-TS <- new(Class = "DTSg", values = flow, ID = "River Flow")
+TS <- new(
+  Class = "DTSg",
+  values = flow, 
+  ID = "River Flow"
+)
 
 ## -----------------------------------------------------------------------------
 TS$print() # or 'print(TS)' or just 'TS'
@@ -74,7 +81,8 @@ TS$values()
 TS$ID
 
 ## -----------------------------------------------------------------------------
-# two new DTSg objects in order to demonstrate reference semantics
+# two new `DTSg` objects in order to demonstrate reference semantics, which are
+# propagated by assignments and broken by deep clones
 TSassigned <- TS
 TScloned   <- TS$clone(deep = TRUE) # or 'clone(x = TS, deep = TRUE)'
 
@@ -82,10 +90,10 @@ TScloned   <- TS$clone(deep = TRUE) # or 'clone(x = TS, deep = TRUE)'
 TS$ID <- "Two River Flows"
 TS
 
-# due to reference semantics, the new ID is also propagated to TSassigned, but
-# not to TScloned (as all data manipulating methods create a clone by default,
-# it is usually best to set or update fields after and not before calling such a
-# method)
+# due to reference semantics, the new ID is also propagated to `TSassigned`, but
+# not to `TScloned` (as all data manipulating methods create a deep clone by
+# default, it is usually best to set or update fields after and not before
+# calling such a method)
 TSassigned
 TScloned
 

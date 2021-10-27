@@ -1,10 +1,18 @@
-## DTSg v0.7.1
+# DTSg v0.8.1
+
+* Added a "special class" called `".numerary"` to the `class` argument of the `cols` method: allows for querying the names of `integer` and `numeric` columns in one go
+* Added undocumented methods `raggregate`, `rbind`, `set` and `setnames` acting as aliases for `rowaggregate`, `rowbind`, `setCols` and `setColNames`, which are exclusively available in the R6 interface
+* `print` method now truncates the number of printed rows of the values more aggressively
+* Created a `pkgdown` website
+* Improved vignettes and documentation
+
+# DTSg v0.7.1
 
 * Fixed error "Error in prettyNum(.Internal(format(x, trim, digits, nsmall, width, 3L, : invalid value 0 for 'digits' argument" related to tests in upcoming R 4.2.0
 * Slightly improved documentation
 * Minor internal code improvements
 
-## DTSg v0.7.0
+# DTSg v0.7.0
 
 * Added `rowaggregate` method: allows for applying summary functions row-wise to `DTSg` objects
 * Added `rowbind` method: allows for combining the rows of `DTSg` objects
@@ -17,7 +25,7 @@
 * Improved vignettes and documentation
 * Minor internal code improvements
 
-## DTSg v0.6.0
+# DTSg v0.6.0
 
 * Added `subset` method: allows for filtering rows and/or selecting columns of a `DTSg` object
 * Added `setCols` method: allows for setting the values of columns of, adding columns to and/or removing columns from a `DTSg` object
@@ -33,10 +41,10 @@
 * Improved vignettes and documentation
 * Minor internal code improvements
 
-## DTSg v0.5.0
+# DTSg v0.5.0
 
 * Added `getCol` method: allows for querying the values of a single column of a `DTSg` object
-* Added `funby` and `ignoreDST` arguments to colapply: allows for applying functions like `cumsum` to a certain temporal level
+* Added `funby` and `ignoreDST` arguments to `colapply`: allows for applying functions like `cumsum` to a certain temporal level
 * Added `na.status` argument to `new` and `alter` methods: allows for making missing values either `"explicit"` (default) or `"implicit"` or leaving them alone via `"undecided"`
 * Added `na.status` field reflecting the status of missing values
 * Added `na.status` also to the `list` of helper data passed on to temporal aggregation level functions
@@ -47,13 +55,13 @@
 * Improved vignettes and documentation
 * Minor internal code improvements
 
-## DTSg v0.4.1
+# DTSg v0.4.1
 
 * Fixed error "Error in as.POSIXct.numeric(e) : 'origin' must be supplied" related to `rollback` in upcoming R 4.1.0
 * Slightly improved vignettes
 * Minor internal code improvements
 
-## DTSg v0.4.0
+# DTSg v0.4.0
 
 * Added `memoryOverCPU` argument to `rollapply` method: allows for preferring CPU over memory usage which makes the method more flexible in terms of resource consumption
 * Settings of option `DTSgClone` in e.g. *.RProfile* are now respected and not overwritten by `TRUE` when the package is loaded
@@ -62,7 +70,7 @@
 * Slightly improved vignettes and documentation
 * Minor internal code improvements
 
-## DTSg v0.3.0
+# DTSg v0.3.0
 
 * Added `resultCols` and `suffix` arguments to `colapply` and `rollapply` methods: allows for adding return values of applied functions as new columns instead of replacing existing ones
 * `class` argument of `cols` method now accepts a character vector of class names
@@ -72,15 +80,15 @@
 * Slightly improved vignettes and documentation
 * Minor internal code improvements
 
-## DTSg v0.2.1
+# DTSg v0.2.1
 
 * Fixed error "Unsupported type passed to argument 'data'." related to `dygraphs` in at least some previous releases of R ≤ 3.5.3
 
-## DTSg v0.2.0
+# DTSg v0.2.0
 
 * Added `swallow` argument to `new` method: allows for a more resource efficient object creation
-* Added `drop` argument to `values` method: allows for a resource efficient destruction of a `DTSg` object while preserving its *values*
-* Added `class` argument to `values` method: can be used to return the *values* of a `DTSg` object as a `data.frame` instead of a `data.table`
+* Added `drop` argument to `values` method: allows for a resource efficient destruction of a `DTSg` object while preserving its values
+* Added `class` argument to `values` method: can be used to return the values of a `DTSg` object as a `data.frame` instead of a `data.table`
 * `alter` method and linked with it `new` and other methods are now way more resource efficient in some cases
 * Added `timestamps` field providing the total number of timestamps
 * `print` method now omits empty metadata fields
@@ -89,10 +97,10 @@
 * Slightly improved vignettes and documentation
 * Minor internal code improvements
 
-## DTSg v0.1.3
+# DTSg v0.1.3
 
 * Slightly improved vignettes and documentation
 
-## DTSg v0.1.2
+# DTSg v0.1.2
 
 * First release
