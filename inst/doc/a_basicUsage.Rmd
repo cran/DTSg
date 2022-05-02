@@ -2,8 +2,7 @@
 title: "A. Basic usage"
 author: "Gerold Hepp"
 date: "`r Sys.Date()`"
-output:
-  rmarkdown::html_vignette
+output: rmarkdown::html_vignette
 vignette: >
   %\VignetteIndexEntry{A. Basic usage}
   %\VignetteEngine{knitr::rmarkdown}
@@ -48,7 +47,7 @@ Creating an object with the package's alternative interface abusing an S4 constr
 ```{r}
 TS <- new(
   Class = "DTSg",
-  values = flow, 
+  values = flow,
   ID = "River Flow"
 )
 ```
@@ -89,7 +88,7 @@ TS  <- TS$colapply(fun = interpolateLinear)
 TS$nas()
 ```
 
-In case no column name is provided through the `cols` argument of the `colapply` method, the first numeric column is taken by default. Column names for the `cols` argument can be requested from `DTSg` objects with the help of the `cols` method. It supports a `class` and/or `pattern` argument:
+In case no column name is provided through the `cols` argument of the `colapply` method, the first numeric column is taken by default. Column names for the `cols` argument can be requested from `DTSg` objects with the help of the `cols` method. It, among others, supports a `class` and/or `pattern` argument:
 
 ```{r}
 TS$cols() # or 'cols(TS)'
@@ -174,6 +173,7 @@ Valid results are returned for the following fields:
 
 * `aggregated`
 * `fast`
+* `funbyApproach`
 * `ID`
 * `na.status`
 * `parameter`

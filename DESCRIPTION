@@ -2,17 +2,16 @@ Package: DTSg
 Type: Package
 Title: A Class for Working with Time Series Data Based on 'data.table'
         and 'R6' with Largely Optional Reference Semantics
-Version: 0.8.1
+Version: 1.0.0
 Authors@R: person("Gerold", "Hepp", email = "ghepp@iwag.tuwien.ac.at", role = c("aut", "cre"))
 Description: Basic time series functionalities such as listing of missing
     values, application of arbitrary aggregation as well as rolling (asymmetric)
     window functions and automatic detection of periodicity. As it is mainly
     based on 'data.table', it is fast and - in combination with the 'R6'
     package - offers reference semantics. In addition to its native R6
-    interface, it provides an S3 interface inclusive an S3 wrapper method 
-    generator for those who prefer the latter. Finally yet importantly, its
-    functional approach allows for incorporating functionalities from many other
-    packages.
+    interface, it provides an S3 interface for those who prefer the latter.
+    Finally yet importantly, its functional approach allows for incorporating
+    functionalities from many other packages.
 License: MIT + file LICENSE
 URL: https://gisler.github.io/DTSg/
 BugReports: https://github.com/gisler/DTSg/issues
@@ -22,13 +21,13 @@ LazyData: true
 ByteCompile: true
 Depends: R (>= 3.2.0)
 Imports: checkmate, data.table, methods, R6
-Suggests: covr, dygraphs, fasttime, knitr, magrittr, RColorBrewer,
-        rmarkdown, runner (>= 0.3.5), tinytest
-RoxygenNote: 7.1.1
+Suggests: dygraphs, fasttime, knitr, magrittr, RColorBrewer, RcppCCTZ,
+        rmarkdown, runner (>= 0.3.5), tinytest, units
+RoxygenNote: 7.1.2
 VignetteBuilder: knitr
 NeedsCompilation: no
-Packaged: 2021-10-27 20:30:53 UTC; ghepp
+Packaged: 2022-05-02 19:13:50 UTC; ghepp
 Author: Gerold Hepp [aut, cre]
 Maintainer: Gerold Hepp <ghepp@iwag.tuwien.ac.at>
 Repository: CRAN
-Date/Publication: 2021-10-27 21:00:02 UTC
+Date/Publication: 2022-05-02 19:42:03 UTC

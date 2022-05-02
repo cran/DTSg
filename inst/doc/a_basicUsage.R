@@ -21,7 +21,7 @@ TS <- DTSg$new(
 ## -----------------------------------------------------------------------------
 TS <- new(
   Class = "DTSg",
-  values = flow, 
+  values = flow,
   ID = "River Flow"
 )
 

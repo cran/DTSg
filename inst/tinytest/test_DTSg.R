@@ -141,6 +141,19 @@ expect_true(
   info = '"funbyHelpers" takes precedence over "ignoreDST"'
 )
 
+expect_true(
+  {
+    DTSg$new(CEThourlyData)$aggregate(
+      byYmd___,
+      length,
+      funbyApproach = "fasttime",
+      funbyHelpers = list(funbyApproach = "RcppCCTZ")
+    )
+    TRUE
+  },
+  info = '"funbyHelpers" takes precedence over "funbyApproach"'
+)
+
 expect_error(
   DTSg$new(DT1)$aggregate(
     byYmdH__,
@@ -329,65 +342,114 @@ expect_identical(
   info = "custom helper data is appended correctly"
 )
 
-#### cols method ####
-expect_identical(
-  DTSg$new(DT1)$cols(),
-  c("col1", "col2", "col3"),
-  info = "all column names are returned"
-)
+#### cols and names methods ####
+for (method in c("cols", "names")) {
+  expect_identical(
+    DTSg$new(DT1)[[method]](),
+    c("col1", "col2", "col3"),
+    info = "all column names are returned"
+  )
 
-expect_identical(
-  DTSg$new(DT1)$cols("character"),
-  "col3",
-  info = "character column names are returned"
-)
+  expect_identical(
+    DTSg$new(DT1)[[method]]("character"),
+    "col3",
+    info = "character column names are returned (class)"
+  )
 
-expect_identical(
-  DTSg$new(DT2)$cols(c("logical", "character")),
-  c("col2", "col3"),
-  info = "logical and character column names are returned"
-)
+  expect_identical(
+    DTSg$new(DT2)[[method]](c("logical", "character")),
+    c("col2", "col3"),
+    info = "logical and character column names are returned (class)"
+  )
 
-expect_identical(
-  DTSg$new(DT1)$cols("integer"),
-  character(),
-  info = "no column name is returned (class)"
-)
+  expect_identical(
+    DTSg$new(DT1)[[method]]("integer"),
+    character(),
+    info = "no column name is returned (class)"
+  )
 
-expect_identical(
-  DTSg$new(DT3)$cols(".numerary"),
-  c("col2", "col3"),
-  info = '".numerary" column names are returned'
-)
+  expect_identical(
+    DTSg$new(DT3)[[method]](".numerary"),
+    c("col2", "col3"),
+    info = '".numerary" column names are returned (class)'
+  )
 
-expect_identical(
-  DTSg$new(DT3)$cols(c(".numerary", "character")),
-  c("col1", "col2", "col3"),
-  info = '".numerary" and character column names are returned'
-)
+  expect_identical(
+    DTSg$new(DT3)[[method]](c(".numerary", "character")),
+    c("col1", "col2", "col3"),
+    info = '".numerary" and character column names are returned (class)'
+  )
 
-expect_identical(
-  DTSg$new(DT1)$cols(pattern = "^c.l1$"),
-  "col1",
-  info = "column names matching pattern are returned"
-)
+  expect_identical(
+    DTSg$new(DT1)[[method]](pattern = "^c.l1$"),
+    "col1",
+    info = "column names matching pattern are returned (pattern)"
+  )
 
-expect_identical(
-  DTSg$new(DT1)$cols(pattern = "COL1"),
-  character(),
-  info = "no column name is returned (pattern)"
-)
+  expect_identical(
+    DTSg$new(DT1)[[method]](pattern = "COL1"),
+    character(),
+    info = "no column name is returned (pattern)"
+  )
 
-expect_identical(
-  DTSg$new(DT1)$cols(pattern = "COL1", ignore.case = TRUE),
-  "col1",
-  info = '"..." passes on arguments correctly'
-)
+  expect_identical(
+    DTSg$new(DT1)[[method]](pattern = "COL1", ignore.case = TRUE),
+    "col1",
+    info = '"..." passes on arguments correctly (pattern)'
+  )
 
-expect_error(
-  DTSg$new(DT1)$cols(pattern = ".*", value = FALSE),
-  info = "use of arguments not allowed returns error"
-)
+  expect_error(
+    DTSg$new(DT1)[[method]](pattern = ".*", value = FALSE),
+    info = "use of arguments not allowed returns error (pattern)"
+  )
+
+  expect_identical(
+    DTSg$new(DT1)[[method]](mode = "character"),
+    "col3",
+    info = "character column names are returned (mode)"
+  )
+
+  expect_identical(
+    DTSg$new(DT2)[[method]](mode = c("logical", "character")),
+    c("col2", "col3"),
+    info = "logical and character column names are returned (mode)"
+  )
+
+  expect_identical(
+    DTSg$new(DT1)[[method]](mode = "integer"),
+    character(),
+    info = "no column name is returned (mode)"
+  )
+
+  expect_identical(
+    DTSg$new(DT1)[[method]](typeof = "character"),
+    "col3",
+    info = "character column names are returned (typeof)"
+  )
+
+  expect_identical(
+    DTSg$new(DT2)[[method]](typeof = c("logical", "character")),
+    c("col2", "col3"),
+    info = "logical and character column names are returned (typeof)"
+  )
+
+  expect_identical(
+    DTSg$new(DT1)[[method]](typeof = "integer"),
+    character(),
+    info = "no column name is returned (typeof)"
+  )
+
+  expect_identical(
+    DTSg$new(DT1)[[method]](
+      c("logical", "numeric", "character"),
+      "col2|col3",
+      c("logical", "character"),
+      "character"
+    ),
+    "col3",
+    info = "character column names are returned"
+  )
+}
 
 #### getCol method and [ extract operator ####
 expect_identical(
@@ -430,6 +492,12 @@ expect_true(
 expect_true(
   DTSg$new(UTChourlyData, fast = TRUE)$fast,
   info = '"fast" field is set correctly'
+)
+
+expect_identical(
+  DTSg$new(DT1, funbyApproach = "RcppCCTZ")$funbyApproach,
+  "RcppCCTZ",
+  info = '"funbyApproach" field is set correctly'
 )
 
 expect_identical(

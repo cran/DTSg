@@ -12,7 +12,7 @@
 
 <meta name="author" content="Gerold Hepp" />
 
-<meta name="date" content="2021-10-27" />
+<meta name="date" content="2022-05-02" />
 
 <title>A. Basic usage</title>
 
@@ -141,7 +141,7 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
 
 <h1 class="title toc-ignore">A. Basic usage</h1>
 <h4 class="author">Gerold Hepp</h4>
-<h4 class="date">2021-10-27</h4>
+<h4 class="date">2022-05-02</h4>
 
 
 
@@ -183,7 +183,7 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
 <p>Creating an object with the package’s alternative interface abusing an S4 constructor looks like this:</p>
 <div class="sourceCode" id="cb3"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a>TS <span class="ot">&lt;-</span> <span class="fu">new</span>(</span>
 <span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a>  <span class="at">Class =</span> <span class="st">&quot;DTSg&quot;</span>,</span>
-<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a>  <span class="at">values =</span> flow, </span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a>  <span class="at">values =</span> flow,</span>
 <span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a>  <span class="at">ID =</span> <span class="st">&quot;River Flow&quot;</span></span>
 <span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a>)</span></code></pre></div>
 </div>
@@ -257,7 +257,7 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
 <span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a><span class="co"># or &#39;colapply(TS, fun = interpolateLinear)&#39;</span></span>
 <span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a>TS<span class="sc">$</span><span class="fu">nas</span>()</span>
 <span id="cb7-4"><a href="#cb7-4" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; Empty data.table (0 rows and 5 cols): .col,.group,.from,.to,.n</span></span></code></pre></div>
-<p>In case no column name is provided through the <code>cols</code> argument of the <code>colapply</code> method, the first numeric column is taken by default. Column names for the <code>cols</code> argument can be requested from <code>DTSg</code> objects with the help of the <code>cols</code> method. It supports a <code>class</code> and/or <code>pattern</code> argument:</p>
+<p>In case no column name is provided through the <code>cols</code> argument of the <code>colapply</code> method, the first numeric column is taken by default. Column names for the <code>cols</code> argument can be requested from <code>DTSg</code> objects with the help of the <code>cols</code> method. It, among others, supports a <code>class</code> and/or <code>pattern</code> argument:</p>
 <div class="sourceCode" id="cb8"><pre class="sourceCode r"><code class="sourceCode r"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a>TS<span class="sc">$</span><span class="fu">cols</span>() <span class="co"># or &#39;cols(TS)&#39;</span></span>
 <span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a><span class="co">#&gt; [1] &quot;flow&quot;</span></span>
 <span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a>TS<span class="sc">$</span><span class="fu">cols</span>(<span class="at">class =</span> <span class="st">&quot;numeric&quot;</span>) <span class="co"># or &#39;cols(TS, class = &quot;numeric&quot;)&#39;</span></span>
@@ -414,6 +414,7 @@ code span.wa { color: #60a0b0; font-weight: bold; font-style: italic; } /* Warni
 <ul>
 <li><code>aggregated</code></li>
 <li><code>fast</code></li>
+<li><code>funbyApproach</code></li>
 <li><code>ID</code></li>
 <li><code>na.status</code></li>
 <li><code>parameter</code></li>

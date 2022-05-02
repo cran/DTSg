@@ -1,3 +1,63 @@
+#' S3 wrapper method generator
+#'
+#' Generates S3 wrapper methods for public methods of `R6ClassGenerator`s, but
+#' can also be used to generate \dQuote{plain} function wrappers.
+#'
+#' @param R6Method An [`expression`] with or a public method ([`function`]) of
+#'   an `R6ClassGenerator`.
+#' @param self A character string specifying the name of the parameter, which
+#'   will take the R6 object.
+#' @param dots A logical specifying if a `...` parameter shall be added as last
+#'   parameter in case none already exists. This might be required for S3
+#'   generic/method consistency.
+#'
+#' @return Returns an S3 method ([`function`]).
+#'
+#' @seealso [`S3Methods`], [`R6::R6Class`]
+#'
+#' @examples
+#' # generate an S3 wrapper method for 'alter' of 'DTSg'
+#' alter.DTSg <- S3WrapperGenerator(
+#'   R6Method = DTSg$public_methods$alter
+#' )
+#'
+#' @export
+S3WrapperGenerator <- function(R6Method, self = "x", dots = TRUE) {
+  if (is.function(R6Method)) {
+    R6Method <- as.expression(substitute(R6Method))
+  }
+  if (!is.expression(R6Method) ||
+      R6Method[[1L]][[2L]][[3L]] != "public_methods" ||
+      class(eval(R6Method[[1L]][[2L]][[2L]])) != "R6ClassGenerator") {
+    stop(
+      '"R6Method" must contain a public method of an "R6ClassGenerator".',
+      call. = FALSE
+    )
+  }
+  qassert(self, "S1")
+  qassert(dots, "B1")
+
+  args <- list()
+  args[[self]] <- alist(`self` = )$`self`
+  args <- c(args, formals(eval(R6Method)))
+
+  if (dots && !any(names(args) == "...")) {
+    args[["..."]] <- alist(... = )$...
+  }
+
+  S3Method <- function() {
+    call <- match.call()
+    call[[1L]] <- call("$", as.name(self), R6Method[[1L]][[3L]])
+    call[[2L]] <- NULL
+
+    eval(call)
+  }
+
+  formals(S3Method) <- args
+
+  S3Method
+}
+
 #### aggregate ####
 #' @importFrom stats aggregate
 NULL
@@ -29,6 +89,11 @@ NULL
 #'   for further information.
 #' @param funbyHelpers An optional [`list`] with helper data passed on to
 #'   `funby`. See corresponding section for further information.
+#' @param funbyApproach A character string specifying the flavour of the applied
+#'   temporal aggregation level function. Either `"base"`, which utilises
+#'   [`as.POSIXct`], or `"fasttime"`, which utilises [`fasttime::fastPOSIXct`],
+#'   or `"RcppCCTZ"`, which utilises [`RcppCCTZ::parseDatetime`] as the main
+#'   function for transforming timestamps.
 #' @param clone A logical specifying if the object shall be modified in place or
 #'   if a deep clone (copy) shall be made beforehand.
 #'
@@ -42,12 +107,13 @@ NULL
 #' * _periodicity:_ Same as the [`periodicity`][DTSg] field.
 #' * _na.status:_ Same as the [`na.status`][DTSg] field.
 #' * _multiplier:_ Same as the `multiplier` argument.
+#' * _funbyApproach:_ Same as the `funbyApproach` argument.
 #'
 #' Any additional element specified in the `funbyHelpers` argument is appended
 #' to the end of the helper data [`list`]. In case `funbyHelpers` contains an
-#' _ignoreDST_ or _multiplier_ element, it takes precedence over the respective
-#' method argument. _timezone, periodicity_ and _na.status_ elements are
-#' rejected.
+#' _ignoreDST, multiplier_ or _funbyApproach_ element, it takes precedence over
+#' the respective method argument. _timezone, periodicity_ and _na.status_
+#' elements are rejected, as they are always taken directly from the object.
 #'
 #' The temporal aggregation level of certain [`TALFs`] can be adjusted with the
 #' help of the `multiplier` argument. A `multiplier` of `10`, for example, makes
@@ -56,15 +122,6 @@ NULL
 #' then aggregates all months of all first and all months of all second half
 #' years instead of all months of all years separately. This feature is
 #' supported by the following [`TALFs`] of the package:
-#' * \code{\link{byFasttimeY_____}}
-#' * \code{\link{byFasttimeYm____}}
-#' * \code{\link{byFasttimeYmdH__}}
-#' * \code{\link{byFasttimeYmdHM_}}
-#' * \code{\link{byFasttimeYmdHMS}}
-#' * \code{\link{byFasttime_m____}}
-#' * \code{\link{byFasttime___H__}}
-#' * \code{\link{byFasttime____M_}}
-#' * \code{\link{byFasttime_____S}}
 #' * \code{\link{byY_____}}
 #' * \code{\link{byYm____}}
 #' * \code{\link{byYmdH__}} (UTC and equivalent as well as all Etc/GMT time zones only)
@@ -97,13 +154,13 @@ NULL
 #'
 #' @section Ignore day saving time:
 #' `ignoreDST` tells a temporal aggregation level function if it is supposed to
-#' ignore day saving time while forming new timestamps. This can be a desired
-#' feature for time series strictly following the position of the sun such as
-#' hydrological time series. Doing so ensures that diurnal variations are
-#' preserved by all means and all intervals are of the \dQuote{correct} length,
-#' however, a possible limitation might be that the day saving time shift is
-#' invariably assumed to be one hour long. This feature requires that the
-#' periodicity of the time series was recognised and is supported by the
+#' ignore day saving time while transforming the timestamps. This can be a
+#' desired feature for time series strictly following the position of the sun
+#' such as hydrological time series. Doing so ensures that diurnal variations
+#' are preserved by all means and all intervals are of the \dQuote{correct}
+#' length, however, a possible limitation might be that the day saving time
+#' shift is invariably assumed to be one hour long. This feature requires that
+#' the periodicity of the time series was recognised and is supported by the
 #' following [`TALFs`] of the package:
 #' * \code{\link{byY_____}}
 #' * \code{\link{byYQ____}}
@@ -340,14 +397,18 @@ cols <- function(x, ...) {
 }
 #' Get column names
 #'
-#' Returns all column names of a [`DTSg`] object, those of certain [`class`]es
-#' and/or those matching a certain pattern only.
+#' Returns all column names of a [`DTSg`] object, those of certain [`class`]es,
+#' [`mode`]s, [`typeof`]s and/or those matching a certain pattern only.
 #'
 #' @param class An optional character vector matched to the most specific class
 #'   (first element) of each column's [`class`] vector. The \dQuote{special
 #'   class} `".numerary"` matches the [`integer`] and [`numeric`] classes.
 #' @param pattern An optional character string passed on to the `pattern`
 #'   argument of [`grep`].
+#' @param mode An optional character vector matched to each column's [`mode`]
+#'   vector.
+#' @param typeof An optional character vector matched to each column's
+#'   [`typeof`] vector.
 #' @param \dots Further arguments passed on to [`grep`]. The `value` argument is
 #'   rejected.
 #' @inheritParams aggregate.DTSg
@@ -500,9 +561,10 @@ new <- function(
   unit = "",
   variant = "",
   aggregated = FALSE,
-  fast = FALSE,
+  fast = getOption("DTSgFast"),
   swallow = FALSE,
-  na.status = c("explicit", "implicit", "undecided")
+  na.status = getOption("DTSgNA.status"),
+  funbyApproach = getOption("DTSgFunbyApproach")
 ) {
   # no R CMD check warning
 }
@@ -731,9 +793,9 @@ rowaggregate <- function(x, ...) {
 #' # new DTSg object
 #' DT <- data.table::data.table(
 #'   date = flow$date,
-#'   flow1 = flow$flow - rnorm(nrow(flow)),
+#'   flow1 = flow$flow - abs(rnorm(nrow(flow))),
 #'   flow2 = flow$flow,
-#'   flow3 = flow$flow + rnorm(nrow(flow))
+#'   flow3 = flow$flow + abs(rnorm(nrow(flow)))
 #' )
 #' x <- DTSg$new(values = DT)
 #'
@@ -884,6 +946,22 @@ setCols <- function(x, ...) {
 #'   cols = "flow",
 #'   values = 100
 #' ))
+#'
+#' # set measurement unit with the help of 'units'
+#' if (requireNamespace("units", quietly = TRUE)) {
+#'   ## R6 method
+#'   x$setCols(
+#'     cols = "flow",
+#'     values = units::set_units(x["flow"], "m^3/s")
+#'   )$print()
+#'
+#'   ## S3 method
+#'   print(setCols(
+#'     x = x,
+#'     cols = "flow",
+#'     values = units::set_units(x["flow"], "m^3/s")
+#'   ))
+#' }
 #'
 #' @aliases setCols set
 #'

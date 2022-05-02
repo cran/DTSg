@@ -16,8 +16,9 @@
 #' operator.
 #'
 #' @usage new(Class, values, ID = "", parameter = "", unit = "", variant = "",
-#'   aggregated = FALSE, fast = FALSE, swallow = FALSE, na.status =
-#'   c("explicit", "implicit", "undecided"))
+#'   aggregated = FALSE, fast = getOption("DTSgFast"), swallow = FALSE,
+#'   na.status = getOption("DTSgNA.status"), funbyApproach =
+#'   getOption("DTSgFunbyApproach"))
 #'
 #' @param Class A character string. Must be `"DTSg"` in order to create a `DTSg`
 #'   object. Otherwise a different object may or may not be created (S4
@@ -55,6 +56,13 @@
 #'   `"implicit"`, which removes timestamps with missing values on all value
 #'   columns, or `"undecided"` for no such action. Please note that `DTSg`
 #'   objects work best with explicitly missing values.
+#' @param funbyApproach A character string specifying the default flavour of
+#'   [`TALFs`] used with the created `DTSg` object. Either `"base"`, which
+#'   utilises [`as.POSIXct`], or `"fasttime"`, which utilises
+#'   [`fasttime::fastPOSIXct`], or `"RcppCCTZ"`, which utilises
+#'   [`RcppCCTZ::parseDatetime`] as the main function for transforming
+#'   timestamps. Custom approaches for user defined temporal aggregation level
+#'   functions are also possible.
 #'
 #' @return Returns a `DTSg` object.
 #'
@@ -91,6 +99,7 @@
 #' read-only though:
 #' * `aggregated`: Same as the `aggregated` argument.
 #' * `fast`: Same as the `fast` argument.
+#' * `funbyApproach`: Same as the `funbyApproach` argument.
 #' * `ID`: Same as the `ID` argument. It is used as the title of plots.
 #' * `na.status`: Same as the `na.status` argument. When set, the missing values
 #' of the object are expanded or collapsed accordingly.
@@ -116,7 +125,9 @@
 #' primary axis of plots when the `parameter` field is set.
 #'
 #' The `parameter`, `unit` and `variant` fields are especially useful for time
-#' series with a single variable (value column) only.
+#' series of a single variable. For time series of multiple variables with
+#' differing units the functionality of the \pkg{units} package may pose a
+#' viable alternative.
 #'
 #' @section Options:
 #' The behaviour of `DTSg` objects can be customised with the help of the
@@ -124,6 +135,11 @@
 #' * _DTSgClone:_ A logical specifying if `DTSg` objects are, by default,
 #' modified in place (`FALSE`) or if a deep clone (copy) shall be made
 #' beforehand (`TRUE`).
+#' * _DTSgDeprecatedWarnings:_ A logical specifying if warnings are displayed
+#' when calling deprecated features.
+#' * _DTSgFast:_ Default value for the `fast` argument.
+#' * _DTSgFunbyApproach:_ Default value for the `funbyApproach` argument.
+#' * _DTSgNA.status:_ Default value for the `na.status` argument.
 #'
 #' @note
 #' Due to the [`POSIXct`] nature of the _.dateTime_ column, the same sub-second
@@ -159,6 +175,7 @@ DTSg <- R6Class(
 
   #### Private ####
   private = list(
+    .funbyApproach = character(),
     .ID = character(),
     .isAggregated = logical(),
     .isFast = logical(),
@@ -183,16 +200,18 @@ DTSg <- R6Class(
       x <- tryCatch(
         fun(x, ...),
         error = function(e) {
-          stop(
-            sprintf("Cannot coerce %s because %s.", msgPart, deparse(e$message)),
-            call. = FALSE
-          )
+          stop(sprintf(
+            "Cannot coerce %s because %s.",
+            msgPart,
+            deparse(e$message)
+          ), call. = FALSE)
         },
         warning = function(w) {
-          stop(
-            sprintf("Will not coerce %s because %s.", msgPart, deparse(w$message)),
-            call. = FALSE
-          )
+          stop(sprintf(
+            "Will not coerce %s because %s.",
+            msgPart,
+            deparse(w$message)
+          ), call. = FALSE)
         }
       )
 
@@ -288,7 +307,7 @@ DTSg <- R6Class(
       assertPOSIXct(to, lower = from, any.missing = FALSE, len = 1L)
     },
 
-    funbyHelpers = function(ignoreDST, multiplier, .helpers) {
+    funbyHelpers = function(ignoreDST, multiplier, funbyApproach, .helpers) {
       if (!is.null(.helpers)) {
         qassert(.helpers, "L+")
         helpers <- names(.helpers)
@@ -302,7 +321,8 @@ DTSg <- R6Class(
 
         if (any(helpers %chin% c("timezone", "periodicity", "na.status"))) {
           stop(
-            '"timezone", "periodicity" and "na.status" helpers are not allowed in this context.',
+            '"timezone", "periodicity" and "na.status" helpers are not ',
+            "allowed in this context.",
             call. = FALSE
           )
         }
@@ -324,6 +344,10 @@ DTSg <- R6Class(
           )
           .helpers[["multiplier"]] <- NULL
         }
+        if ("funbyApproach" %chin% helpers) {
+          funbyApproach <- .helpers[["funbyApproach"]]
+          .helpers[["funbyApproach"]] <- NULL
+        }
       }
 
       c(list(
@@ -331,7 +355,8 @@ DTSg <- R6Class(
         ignoreDST = ignoreDST,
         periodicity = private$.periodicity,
         na.status = private$.na.status,
-        multiplier = multiplier
+        multiplier = multiplier,
+        funbyApproach = funbyApproach
       ), .helpers)
     },
 
@@ -402,12 +427,18 @@ DTSg <- R6Class(
       ignoreDST = FALSE,
       multiplier = 1L,
       funbyHelpers = NULL,
+      funbyApproach = self$funbyApproach,
       clone = getOption("DTSgClone")
     ) {
       assertFunction(funby)
       qassert(ignoreDST, "B1")
       multiplier <- assertCount(multiplier, positive = TRUE, coerce = TRUE)
-      .funbyHelpers <- private$funbyHelpers(ignoreDST, multiplier, funbyHelpers)
+      .funbyHelpers <- private$funbyHelpers(
+        ignoreDST,
+        multiplier,
+        funbyApproach,
+        funbyHelpers
+      )
       qassert(funby(
         self$values(reference = TRUE)[[".dateTime"]][1L],
         .funbyHelpers
@@ -429,6 +460,7 @@ DTSg <- R6Class(
           ignoreDST = ignoreDST,
           multiplier = multiplier,
           funbyHelpers = funbyHelpers,
+          funbyApproach = funbyApproach,
           clone = FALSE
         ))
       }
@@ -458,7 +490,8 @@ DTSg <- R6Class(
           ]
 
           message(
-            'Missing values are always stripped regardless of the value of a possible "na.rm" argument.'
+            "Missing values are always stripped regardless of the value of a ",
+            'possible "na.rm" argument.'
           )
         }
       } else {
@@ -534,11 +567,8 @@ DTSg <- R6Class(
       } else if (na.status == "explicit" && by == "unrecognised" &&
                  private$.timestamps > 2L) {
         warning(
-          paste(
-            "Only time series with recognised periodicity can have explicitly missing values.",
-            'Consider calling "alter()" with "na.status = \'explicit\'" and specified "by" argument.',
-            sep = "\n"
-          ),
+          "Only time series with recognised periodicity can have explicitly missing values.\n",
+          'Consider calling "alter()" with "na.status = \'explicit\'" and specified "by" argument.',
           call. = FALSE
         )
       }
@@ -554,7 +584,10 @@ DTSg <- R6Class(
 
         private$.na.status <- na.status
       } else if (na.status == "undecided" && private$.na.status != "undecided") {
-        stop("Status of missing values has already been decided on.", call. = FALSE)
+        stop(
+          "Status of missing values has already been decided on.",
+          call. = FALSE
+        )
       }
 
       invisible(self)
@@ -571,6 +604,7 @@ DTSg <- R6Class(
       ignoreDST = FALSE,
       multiplier = 1L,
       funbyHelpers = NULL,
+      funbyApproach = self$funbyApproach,
       clone = getOption("DTSgClone")
     ) {
       assertFunction(fun)
@@ -593,6 +627,7 @@ DTSg <- R6Class(
           ignoreDST = ignoreDST,
           multiplier = multiplier,
           funbyHelpers = funbyHelpers,
+          funbyApproach = funbyApproach,
           clone = FALSE
         ))
       }
@@ -601,7 +636,12 @@ DTSg <- R6Class(
         assertFunction(funby)
         qassert(ignoreDST, "B1")
         multiplier <- assertCount(multiplier, positive = TRUE, coerce = TRUE)
-        .funbyHelpers <- private$funbyHelpers(ignoreDST, multiplier, funbyHelpers)
+        .funbyHelpers <- private$funbyHelpers(
+          ignoreDST,
+          multiplier,
+          funbyApproach,
+          funbyHelpers
+        )
         assertAtomic(funby(
           self$values(reference = TRUE)[[".dateTime"]][1L],
           .funbyHelpers
@@ -635,19 +675,16 @@ DTSg <- R6Class(
       invisible(self)
     },
 
-    cols = function(class = NULL, pattern = NULL, ...) {
+    cols = function(
+      class = NULL,
+      pattern = NULL,
+      mode = NULL,
+      typeof = NULL,
+      ...
+    ) {
       cols <- names(private$.values)[-1L]
 
-      if (testClass(class, "character") && length(class) == 1L && class == "all") {
-        warning(
-          paste(
-            '"class = \'all\'" is deprecated.',
-            "Please use argument's default value NULL to get all column names.",
-            sep = "\n"
-          ),
-          call. = FALSE
-        )
-      } else if (!is.null(class)) {
+      if (!is.null(class)) {
         qassert(class, "S+")
 
         if (".numerary" %chin% class) {
@@ -674,6 +711,30 @@ DTSg <- R6Class(
         cols <- grep(pattern, cols, value = TRUE, ...)
       }
 
+      if (!is.null(mode)) {
+        qassert(mode, "S+")
+
+        modes <- vapply(
+          private$.values[, cols, with = FALSE],
+          function(col) {mode(col)},
+          character(1L)
+        )
+
+        cols <- cols[modes %chin% mode]
+      }
+
+      if (!is.null(typeof)) {
+        qassert(typeof, "S+")
+
+        typeofs <- vapply(
+          private$.values[, cols, with = FALSE],
+          function(col) {typeof(col)},
+          character(1L)
+        )
+
+        cols <- cols[typeofs %chin% typeof]
+      }
+
       cols
     },
 
@@ -691,9 +752,10 @@ DTSg <- R6Class(
       unit = "",
       variant = "",
       aggregated = FALSE,
-      fast = FALSE,
+      fast = getOption("DTSgFast"),
       swallow = FALSE,
-      na.status = c("explicit", "implicit", "undecided")
+      na.status = getOption("DTSgNA.status"),
+      funbyApproach = getOption("DTSgFunbyApproach")
     ) {
       assertDataFrame(values, min.rows = 1L, min.cols = 2L)
       assertCharacter(
@@ -704,7 +766,7 @@ DTSg <- R6Class(
       )
       assertNoStartingDot(names(values)[-1L])
       qassert(swallow, "B1")
-      na.status <- match.arg(na.status)
+      na.status <- match.arg(na.status, private$.na.statuses)
 
       if (is.data.table(values)) {
         if (swallow) {
@@ -722,6 +784,7 @@ DTSg <- R6Class(
       self$variant <- variant
       self$aggregated <- aggregated
       self$fast <- fast
+      self$funbyApproach <- funbyApproach
 
       private$.origDateTimeCol <- names(private$.values)[1L]
 
@@ -778,6 +841,10 @@ DTSg <- R6Class(
       self$alter(clone = FALSE)
 
       invisible(self)
+    },
+
+    names = function(...) {
+      self$cols(...)
     },
 
     nas = function(cols = self$cols()) {
@@ -963,7 +1030,10 @@ DTSg <- R6Class(
       seqLen <- seq_len(private$determineLen(private$.timestamps))
 
       if (anyNA(private$.values[[1L]][seqLen])) {
-        stop(".dateTime column must not have any missing values.", call. = FALSE)
+        stop(
+          ".dateTime column must not have any missing values.",
+          call. = FALSE
+        )
       }
 
       if (private$.timestamps < 2L) {
@@ -1378,7 +1448,8 @@ DTSg <- R6Class(
       na.status = "implicit",
       clone = getOption("DTSgClone"),
       multiplier = 1L,
-      funbyHelpers = NULL
+      funbyHelpers = NULL,
+      funbyApproach = self$funbyApproach
     ) {
       if (!missing(i)) {
         i <- private$determineFilter(i, as.expression(substitute(i)))
@@ -1399,7 +1470,8 @@ DTSg <- R6Class(
           na.status = na.status,
           clone = FALSE,
           multiplier = multiplier,
-          funbyHelpers = funbyHelpers
+          funbyHelpers = funbyHelpers,
+          funbyApproach = funbyApproach
         ))
       }
 
@@ -1410,7 +1482,12 @@ DTSg <- R6Class(
           assertFunction(funby)
           qassert(ignoreDST, "B1")
           multiplier <- assertCount(multiplier, positive = TRUE, coerce = TRUE)
-          .funbyHelpers <- private$funbyHelpers(ignoreDST, multiplier, funbyHelpers)
+          .funbyHelpers <- private$funbyHelpers(
+            ignoreDST,
+            multiplier,
+            funbyApproach,
+            funbyHelpers
+          )
           assertAtomic(funby(
             self$values(reference = TRUE)[[".dateTime"]][1L],
             .funbyHelpers
@@ -1499,6 +1576,18 @@ DTSg <- R6Class(
         qassert(value, "B1")
 
         private$.isFast <- value
+
+        invisible(self)
+      }
+    },
+
+    funbyApproach = function(value) {
+      if (missing(value)) {
+        private$.funbyApproach
+      } else {
+        qassert(value, "S1")
+
+        private$.funbyApproach <- value
 
         invisible(self)
       }

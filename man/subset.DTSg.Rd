@@ -15,6 +15,7 @@
   clone = getOption("DTSgClone"),
   multiplier = 1L,
   funbyHelpers = NULL,
+  funbyApproach = self$funbyApproach,
   ...
 )
 }
@@ -53,6 +54,12 @@ for further information.}
 \item{funbyHelpers}{An optional \code{\link{list}} with helper data passed on to
 \code{funby}. See corresponding section for further information.}
 
+\item{funbyApproach}{A character string specifying the flavour of the applied
+temporal aggregation level function. Either \code{"base"}, which utilises
+\code{\link{as.POSIXct}}, or \code{"fasttime"}, which utilises \code{\link[fasttime:fastPOSIXct]{fasttime::fastPOSIXct}},
+or \code{"RcppCCTZ"}, which utilises \code{\link[RcppCCTZ:parseDatetime]{RcppCCTZ::parseDatetime}} as the main
+function for transforming timestamps.}
+
 \item{...}{Further arguments passed on to \code{fun}.}
 }
 \value{
@@ -82,13 +89,14 @@ as its second. The default elements of this \code{\link{list}} are as follows:
 \item \emph{periodicity:} Same as the \code{\link[=DTSg]{periodicity}} field.
 \item \emph{na.status:} Same as the \code{\link[=DTSg]{na.status}} field.
 \item \emph{multiplier:} Same as the \code{multiplier} argument.
+\item \emph{funbyApproach:} Same as the \code{funbyApproach} argument.
 }
 
 Any additional element specified in the \code{funbyHelpers} argument is appended
 to the end of the helper data \code{\link{list}}. In case \code{funbyHelpers} contains an
-\emph{ignoreDST} or \emph{multiplier} element, it takes precedence over the respective
-method argument. \emph{timezone, periodicity} and \emph{na.status} elements are
-rejected.
+\emph{ignoreDST, multiplier} or \emph{funbyApproach} element, it takes precedence over
+the respective method argument. \emph{timezone, periodicity} and \emph{na.status}
+elements are rejected, as they are always taken directly from the object.
 
 The temporal aggregation level of certain \code{\link{TALFs}} can be adjusted with the
 help of the \code{multiplier} argument. A \code{multiplier} of \code{10}, for example, makes
@@ -98,15 +106,6 @@ then aggregates all months of all first and all months of all second half
 years instead of all months of all years separately. This feature is
 supported by the following \code{\link{TALFs}} of the package:
 \itemize{
-\item \code{\link{byFasttimeY_____}}
-\item \code{\link{byFasttimeYm____}}
-\item \code{\link{byFasttimeYmdH__}}
-\item \code{\link{byFasttimeYmdHM_}}
-\item \code{\link{byFasttimeYmdHMS}}
-\item \code{\link{byFasttime_m____}}
-\item \code{\link{byFasttime___H__}}
-\item \code{\link{byFasttime____M_}}
-\item \code{\link{byFasttime_____S}}
 \item \code{\link{byY_____}}
 \item \code{\link{byYm____}}
 \item \code{\link{byYmdH__}} (UTC and equivalent as well as all Etc/GMT time zones only)
@@ -122,13 +121,13 @@ supported by the following \code{\link{TALFs}} of the package:
 \section{Ignore day saving time}{
 
 \code{ignoreDST} tells a temporal aggregation level function if it is supposed to
-ignore day saving time while forming new timestamps. This can be a desired
-feature for time series strictly following the position of the sun such as
-hydrological time series. Doing so ensures that diurnal variations are
-preserved by all means and all intervals are of the \dQuote{correct} length,
-however, a possible limitation might be that the day saving time shift is
-invariably assumed to be one hour long. This feature requires that the
-periodicity of the time series was recognised and is supported by the
+ignore day saving time while transforming the timestamps. This can be a
+desired feature for time series strictly following the position of the sun
+such as hydrological time series. Doing so ensures that diurnal variations
+are preserved by all means and all intervals are of the \dQuote{correct}
+length, however, a possible limitation might be that the day saving time
+shift is invariably assumed to be one hour long. This feature requires that
+the periodicity of the time series was recognised and is supported by the
 following \code{\link{TALFs}} of the package:
 \itemize{
 \item \code{\link{byY_____}}
