@@ -16,7 +16,7 @@
 #' @seealso [`S3Methods`], [`R6::R6Class`]
 #'
 #' @examples
-#' # generate an S3 wrapper method for 'alter' of 'DTSg'
+#' # generate an S3 wrapper method for 'alter()' of 'DTSg'
 #' alter.DTSg <- S3WrapperGenerator(
 #'   R6Method = DTSg$public_methods$alter
 #' )
@@ -28,7 +28,7 @@ S3WrapperGenerator <- function(R6Method, self = "x", dots = TRUE) {
   }
   if (!is.expression(R6Method) ||
       R6Method[[1L]][[2L]][[3L]] != "public_methods" ||
-      class(eval(R6Method[[1L]][[2L]][[2L]])) != "R6ClassGenerator") {
+      !testClass(eval(R6Method[[1L]][[2L]][[2L]]), "R6ClassGenerator")) {
     stop(
       '"R6Method" must contain a public method of an "R6ClassGenerator".',
       call. = FALSE
@@ -78,7 +78,10 @@ NULL
 #'   value(s) must be of length one. See corresponding section for further
 #'   information.
 #' @param \dots Further arguments passed on to `fun`.
-#' @param cols A character vector specifying the columns to aggregate.
+#' @param cols A character vector specifying the columns to aggregate. Another
+#'   possibility is a character string containing either comma separated column
+#'   names, for example, `"x,y,z"`, or the start and end column separated by a
+#'   colon, for example, `"x:z"`.
 #' @param n A logical specifying if a column named `.n` giving the number of
 #'   values per temporal aggregation level shall be added. See corresponding
 #'   section for further information.
@@ -348,10 +351,15 @@ colapply <- function(x, ...) {
 #'
 #' @param fun A [`function`]. Its return value must be of length one.
 #' @param cols A character vector specifying the columns to apply `fun` to.
+#'   Another possibility is a character string containing either comma separated
+#'   column names, for example, `"x,y,z"`, or the start and end column separated
+#'   by a colon, for example, `"x:z"`.
 #' @param resultCols An optional character vector of the same length as `cols`
-#'   specifying the column names for the return values of `fun`. Non-existing
-#'   columns are added and existing columns are overwritten. Columns are matched
-#'   element-wise between `cols` and `resultCols`.
+#'   specifying the column names for the return values of `fun`. Another
+#'   possibility is a character string containing comma separated column names,
+#'   for example, `"x,y,z"`. Non-existing columns are added and existing columns
+#'   are overwritten. Columns are matched element-wise between `cols` and
+#'   `resultCols`.
 #' @param suffix An optional character string. The return values of `fun` are
 #'   added as new columns with names consisting of the columns specified in
 #'   `cols` and this suffix. Existing columns are never overwritten. Only used
@@ -422,6 +430,9 @@ cols <- function(x, ...) {
 #' # get names of numeric columns
 #' ## R6 method
 #' x$cols(class = "numeric")
+#'
+#' ## 'names()' is a "hidden" R6 alias for 'cols()'
+#' x$names(class = "numeric")
 #'
 #' ## S3 method
 #' cols(x = x, class = "numeric")
@@ -524,7 +535,9 @@ nas <- function(x, ...) {
 #' recognised periodicity.
 #'
 #' @param cols A character vector specifying the columns whose missing values
-#'   shall be listed.
+#'   shall be listed. Another possibility is a character string containing
+#'   either comma separated column names, for example, `"x,y,z"`, or the start
+#'   and end column separated by a colon, for example, `"x:z"`.
 #' @inheritParams alter.DTSg
 #'
 #' @return Returns a [`data.table::data.table`] with five columns:
@@ -594,9 +607,14 @@ setMethod(
 #'   a character string coercible to one. The data is plotted up to this
 #'   timestamp.
 #' @param cols A character vector specifying the columns whose values shall be
-#'   plotted.
+#'   plotted. Another possibility is a character string containing either comma
+#'   separated column names, for example, `"x,y,z"`, or the start and end column
+#'   separated by a colon, for example, `"x:z"`.
 #' @param secAxisCols An optional character vector specifying the columns whose
-#'   values shall be plotted on a secondary axis. Must be a subset of `cols`.
+#'   values shall be plotted on a secondary axis. Another possibility is a
+#'   character string containing either comma separated column names, for
+#'   example, `"x,y,z"`, or the start and end column separated by a colon, for
+#'   example, `"x:z"`. Must be a subset of `cols`.
 #' @param secAxisLabel A character string specifying the label of the optional
 #'   secondary axis.
 #' @inheritParams alter.DTSg
@@ -691,7 +709,9 @@ rollapply <- function(x, ...) {
 #' [`DTSg`] object with recognised periodicity.
 #'
 #' @param cols A character vector specifying the columns whose rolling window
-#'   `fun` shall be applied to.
+#'   `fun` shall be applied to. Another possibility is a character string
+#'   containing either comma separated column names, for example, `"x,y,z"`, or
+#'   the start and end column separated by a colon, for example, `"x:z"`.
 #' @param before An integerish value specifying the size of the window in time
 #'   steps before the \dQuote{center} of the rolling window.
 #' @param after An integerish value specifying the size of the window in time
@@ -777,6 +797,9 @@ rowaggregate <- function(x, ...) {
 #'   all the values of the specified `cols`. The return value(s) must be of
 #'   length one. See corresponding section for further information.
 #' @param cols A character vector specifying the columns to apply `fun` to.
+#'   Another possibility is a character string containing either comma separated
+#'   column names, for example, `"x,y,z"`, or the start and end column separated
+#'   by a colon, for example, `"x:z"`.
 #' @inheritParams aggregate.DTSg
 #'
 #' @section Summary functions:
@@ -802,6 +825,12 @@ rowaggregate <- function(x, ...) {
 #' # mean and standard deviation of multiple measurements per timestamp
 #' ## R6 method
 #' x$rowaggregate(
+#'   resultCols = "flow",
+#'   fun = list(mean = mean, sd = sd)
+#' )$print()
+#'
+#' ## 'raggregate()' is a "hidden" R6 alias for 'rowaggregate()'
+#' x$raggregate(
 #'   resultCols = "flow",
 #'   fun = list(mean = mean, sd = sd)
 #' )$print()
@@ -847,6 +876,12 @@ rowbind <- function(x, ...) {
 #'   flow[1501:.N, ]
 #' )$print()
 #'
+#' ## 'rbind()' is a "hidden" R6 alias for 'rowbind()'
+#' x$rbind(
+#'   list(flow[1001:1500, ], DTSg$new(values = flow[501:1000, ])),
+#'   flow[1501:.N, ]
+#' )$print()
+#'
 #' ## S3 method
 #' print(rowbind(
 #'   x = x,
@@ -869,9 +904,13 @@ setColNames <- function(x, ...) {
 #' Changes the column names of [`DTSg`] objects.
 #'
 #' @param cols A character vector specifying the columns whose names shall be
-#'   set. The name of the _.dateTime_ column cannot be changed.
+#'   set. Another possibility is a character string containing either comma
+#'   separated column names, for example, `"x,y,z"`, or the start and end column
+#'   separated by a colon, for example, `"x:z"`. The name of the _.dateTime_
+#'   column cannot be changed.
 #' @param values A character vector of the same length as `cols` specifying the
-#'   desired column names.
+#'   desired column names. Another possibility is a character string containing
+#'   comma separated column names, for example, `"x,y,z"`.
 #' @inheritParams alter.DTSg
 #'
 #' @inherit alter.DTSg return
@@ -885,6 +924,12 @@ setColNames <- function(x, ...) {
 #' # rename column "flow" to "River Flow"
 #' ## R6 method
 #' x$setColNames(
+#'   cols = "flow",
+#'   values = "River Flow"
+#' )$print()
+#'
+#' ## 'setnames()' is a "hidden" R6 alias for 'setColNames()'
+#' x$setnames(
 #'   cols = "flow",
 #'   values = "River Flow"
 #' )$print()
@@ -916,7 +961,9 @@ setCols <- function(x, ...) {
 #'   argument of [`data.table::data.table`]. Filter expressions can contain the
 #'   special symbol [`.N`][data.table::special-symbols].
 #' @param cols A character vector specifying the columns whose values shall be
-#'   set. The values of the _.dateTime_ column cannot be changed.
+#'   set. Another possibility is a character string containing comma separated
+#'   column names, for example, `"x,y,z"`. The values of the _.dateTime_ column
+#'   cannot be changed.
 #' @param values A vector, [`list`] or list-like object (e.g.
 #'   [`data.table::data.table`]) of replacement and/or new values accepted by
 #'   the `value` argument of \pkg{data.table}'s [`data.table::set`] function.
@@ -934,6 +981,13 @@ setCols <- function(x, ...) {
 #' # cap river flows to 100
 #' ## R6 method
 #' x$setCols(
+#'   i = flow > 100,
+#'   cols = "flow",
+#'   values = 100
+#' )$print()
+#'
+#' ## 'set()' is a "hidden" R6 alias for 'setCols()'
+#' x$set(
 #'   i = flow > 100,
 #'   cols = "flow",
 #'   values = 100
@@ -973,8 +1027,11 @@ setCols.DTSg <- S3WrapperGenerator(expression(DTSg$public_methods$setCols))
 #'
 #' Filters rows and/or selects columns of a [`DTSg`] object.
 #'
-#' @param cols A character vector specifying the columns to select. The
-#'   _.dateTime_ column is always selected and cannot be part of it.
+#' @param cols A character vector specifying the columns to select. Another
+#'   possibility is a character string containing either comma separated column
+#'   names, for example, `"x,y,z"`, or the start and end column separated by a
+#'   colon, for example, `"x:z"`. The _.dateTime_ column is always selected and
+#'   cannot be part of it.
 #' @param funby One of the temporal aggregation level functions described in
 #'   [`TALFs`] or a user defined temporal aggregation level function. Can be
 #'   used to, for instance, select the last two observations of a certain
@@ -1039,7 +1096,9 @@ subset.DTSg <- S3WrapperGenerator(expression(DTSg$public_methods$subset))
 #'
 #' @param object A [`DTSg`] object (S3 method only).
 #' @param cols A character vector specifying the columns whose values shall be
-#'   summarised.
+#'   summarised. Another possibility is a character string containing either
+#'   comma separated column names, for example, `"x,y,z"`, or the start and end
+#'   column separated by a colon, for example, `"x:z"`.
 #' @param \dots Further arguments passed on to [`summary.data.frame`].
 #'
 #' @return Returns a [`table`].

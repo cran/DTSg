@@ -29,7 +29,10 @@ length one. See corresponding section for further information.}
 
 \item{...}{Further arguments passed on to \code{fun}.}
 
-\item{cols}{A character vector specifying the columns to apply \code{fun} to.}
+\item{cols}{A character vector specifying the columns to apply \code{fun} to.
+Another possibility is a character string containing either comma separated
+column names, for example, \code{"x,y,z"}, or the start and end column separated
+by a colon, for example, \code{"x:z"}.}
 
 \item{clone}{A logical specifying if the object shall be modified in place or
 if a deep clone (copy) shall be made beforehand.}
@@ -64,6 +67,12 @@ x <- DTSg$new(values = DT)
 # mean and standard deviation of multiple measurements per timestamp
 ## R6 method
 x$rowaggregate(
+  resultCols = "flow",
+  fun = list(mean = mean, sd = sd)
+)$print()
+
+## 'raggregate()' is a "hidden" R6 alias for 'rowaggregate()'
+x$raggregate(
   resultCols = "flow",
   fun = list(mean = mean, sd = sd)
 )$print()
