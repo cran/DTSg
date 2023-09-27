@@ -335,7 +335,7 @@ expect_identical(
   DTSg$new(DT1[, .(date, col1, col2, col3 = "A")])$colapply(
     cumsum,
     helpers = FALSE,
-    funby = function(x, .helpers) {.helpers[["custom"]]},
+    funby = function(x, .helpers) .helpers[["custom"]],
     funbyHelpers = list(custom = "col3")
   )$values(TRUE)[["col1"]],
   cumsum(DT1[["col1"]]),
@@ -713,12 +713,12 @@ expect_error(
 expect_identical(
   {
     TS <- DTSg$new(DT1)
-    TS$timezone <- "Europe/Kiev"
+    TS$timezone <- "Europe/Kyiv"
     TS$values(TRUE)[[".dateTime"]]
   },
   seq(
-    as.POSIXct("2000-10-29 02:00:00", tz = "Europe/Kiev"),
-    as.POSIXct("2000-10-29 04:30:00", tz = "Europe/Kiev"),
+    as.POSIXct("2000-10-29 02:00:00", tz = "Europe/Kyiv"),
+    as.POSIXct("2000-10-29 04:30:00", tz = "Europe/Kyiv"),
     by = "30 min"
   ),
   info = '"timezone" is converted correctly'

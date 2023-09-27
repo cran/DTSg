@@ -1,4 +1,4 @@
-`DTSg` offers basic time series data functionalities such as listing of missing values, application of arbitrary aggregation as well as rolling (asymmetric) window functions and automatic detection of periodicity. As it is mainly based on `data.table`, it is fast and – in combination with the `R6` package – offers reference semantics. In addition to its native R6 interface, it provides an S3 interface for those who prefer the latter. Finally yet importantly, its functional approach allows for incorporating functionalities from many other packages.
+`DTSg` offers basic time series data functionalities such as listing of missing values, application of arbitrary aggregation as well as rolling (asymmetric) window functions and automatic detection of periodicity. As it is mainly based on `data.table`, it is fast and (in combination with the `R6` package) offers reference semantics. In addition to its native R6 interface, it provides an S3 interface for those who prefer the latter. Finally yet importantly, its functional approach allows for incorporating functionalities from many other packages.
 
 ## Installation
 
@@ -6,7 +6,7 @@ Install the latest release from CRAN:
 
 `install.packages("DTSg")`
 
-[![CRAN Version](https://www.r-pkg.org/badges/version/DTSg)](https://cran.r-project.org/package=DTSg) [![CRAN Checks](https://cranchecks.info/badges/summary/DTSg)](https://cran.r-project.org/web/checks/check_results_DTSg.html)
+[![CRAN Version](https://www.r-pkg.org/badges/version/DTSg)](https://cran.r-project.org/package=DTSg) [![CRAN Checks](https://badges.cranchecks.info/worst/DTSg.svg)](https://cran.r-project.org/web/checks/check_results_DTSg.html)
 
 Install the development version from GitHub (requires the `remotes` package):
 
