@@ -57,12 +57,12 @@
 #'   columns, or `"undecided"` for no such action. Please note that `DTSg`
 #'   objects work best with explicitly missing values.
 #' @param funbyApproach A character string specifying the default flavour of
-#'   [`TALFs`] used with the created `DTSg` object. Either `"base"`, which
-#'   utilises [`as.POSIXct`], or `"fasttime"`, which utilises
-#'   [`fasttime::fastPOSIXct`], or `"RcppCCTZ"`, which utilises
-#'   [`RcppCCTZ::parseDatetime`] as the main function for transforming
-#'   timestamps. Custom approaches for user defined temporal aggregation level
-#'   functions are also possible.
+#'   [`TALFs`] used with the created `DTSg` object. Either `"timechange"`, which
+#'   utilises [`timechange::time_floor`], or `"base"`, which utilises
+#'   [`as.POSIXct`], or `"fasttime"`, which utilises [`fasttime::fastPOSIXct`],
+#'   or `"RcppCCTZ"`, which utilises [`RcppCCTZ::parseDatetime`] as the main
+#'   function for transforming timestamps. Custom approaches for user defined
+#'   temporal aggregation level functions are also possible.
 #'
 #' @return Returns a `DTSg` object.
 #'
@@ -134,12 +134,15 @@
 #' following option. See [`options`] for further information:
 #' * _DTSgClone:_ A logical specifying if `DTSg` objects are, by default,
 #' modified in place (`FALSE`) or if a deep clone (copy) shall be made
-#' beforehand (`TRUE`).
+#' beforehand (`TRUE`) (package's default is `TRUE`).
 #' * _DTSgDeprecatedWarnings:_ A logical specifying if warnings are displayed
-#' when calling deprecated features.
-#' * _DTSgFast:_ Default value for the `fast` argument.
-#' * _DTSgFunbyApproach:_ Default value for the `funbyApproach` argument.
-#' * _DTSgNA.status:_ Default value for the `na.status` argument.
+#' when calling deprecated features (package's default is `TRUE`).
+#' * _DTSgFast:_ Default value for the `fast` argument (package's default is
+#' `FALSE`).
+#' * _DTSgFunbyApproach:_ Default value for the `funbyApproach` argument
+#' (package's default is `"timechange"`).
+#' * _DTSgNA.status:_ Default value for the `na.status` argument  (package's
+#' default is `"explicit"`).
 #'
 #' @note
 #' Due to the [`POSIXct`] nature of the _.dateTime_ column, the same sub-second
@@ -204,18 +207,18 @@ DTSg <- R6Class(
             "Cannot coerce %s because %s.",
             msgPart,
             deparse(e$message)
-          ), call. = FALSE)
+          ))
         },
         warning = function(w) {
           stop(sprintf(
             "Will not coerce %s because %s.",
             msgPart,
             deparse(w$message)
-          ), call. = FALSE)
+          ))
         }
       )
 
-      warning(sprintf("Coerced %s.", msgPart), call. = FALSE)
+      warning(sprintf("Coerced %s.", msgPart))
 
       x
     },
@@ -232,7 +235,7 @@ DTSg <- R6Class(
       if (!is.null(resultCols)) {
         resultCols <- private$extractCols(
           resultCols,
-          colon = FALSE,
+          isSelect = FALSE,
           len = length(cols),
           .var.name = "resultCols"
         )
@@ -251,7 +254,7 @@ DTSg <- R6Class(
       tryCatch(
         {
           if (!testMultiClass(i, c("integer", "numeric")) && !is.expression(i) &&
-              !is.character(i) && !is.list(i)) {
+                !is.character(i) && !is.list(i)) {
             i <- expr
           }
 
@@ -308,7 +311,7 @@ DTSg <- R6Class(
 
     extractCols = function(
       cols,
-      colon = TRUE,
+      isSelect = TRUE,
       min.chars = 1L,
       any.missing = FALSE,
       len = NULL,
@@ -321,7 +324,7 @@ DTSg <- R6Class(
       allCols <- names(private$.values)[-1L]
 
       if (length(cols) == 1L && !cols %chin% allCols) {
-        if (colon && grepl(":", cols, fixed = TRUE)) {
+        if (isSelect && grepl(":", cols, fixed = TRUE)) {
           cols <- strsplit(cols, ":", fixed = TRUE)[[1L]]
 
           assertSubset(cols, allCols)
@@ -344,11 +347,53 @@ DTSg <- R6Class(
         unique = unique,
         .var.name = .var.name
       )
-      if (colon) {
+      if (isSelect) {
         assertSubset(cols, allCols)
       }
 
       cols
+    },
+
+    funApply = function(
+      funs,
+      rowaggregate = FALSE,
+      n = FALSE,
+      nCols = NULL,
+      ...
+    ) {
+      rowCalls <- function(fun, dots) {
+        as.call(c(fun, quote(unlist(.SD, recursive = FALSE)), dots))
+      }
+      colCalls <- function(fun, dots) {
+        as.call(c(as.name("lapply"), as.name(".SD"), fun, dots))
+      }
+
+      if (testClass(funs, "character")) {
+        funs <- lapply(funs, as.name)
+      }
+      dots <- list(...)
+
+      calls <- lapply(
+        funs,
+        if (rowaggregate) rowCalls else colCalls,
+        dots = dots
+      )
+      if (n) {
+        if (nCols > 1L) {
+          calls <- append(calls, quote(.N))
+
+          message(".n column calculated from .dateTime column.")
+        } else {
+          calls <- append(calls, quote(sum(.n)))
+
+          message(".n column calculated disregarding any missing values.")
+        }
+      }
+
+      as.call(c(
+        if (rowaggregate) as.name("list") else as.name("c"),
+        calls
+      ))
     },
 
     funbyHelpers = function(ignoreDST, multiplier, funbyApproach, .helpers) {
@@ -366,8 +411,7 @@ DTSg <- R6Class(
         if (any(helpers %chin% c("timezone", "periodicity", "na.status"))) {
           stop(
             '"timezone", "periodicity" and "na.status" helpers are not ',
-            "allowed in this context.",
-            call. = FALSE
+            "allowed in this context."
           )
         }
 
@@ -402,45 +446,6 @@ DTSg <- R6Class(
         multiplier = multiplier,
         funbyApproach = funbyApproach
       ), .helpers)
-    },
-
-    multiLapply = function(.SD, funs, ...) {
-      do.call(c, lapply(
-        .SD,
-        function(x, ...) {
-          lapply(funs, function(fun, y, ...) fun(y, ...), y = x, ... = ...)
-        },
-        ... = ...
-      ))
-    },
-
-    optiLapply = function(funs, cols, resultCols, ...) {
-      if (is.null(resultCols)) {
-        funs <- rep(funs, length(cols))
-        cols <- rep(cols, each = length(funs) / length(cols))
-        if (!is.null(names(funs))) {
-          resultCols <- sprintf("%s.%s", cols, names(funs))
-        } else {
-          resultCols <- cols
-        }
-      }
-
-      dotsToCharacter <- function(...) {
-        if (...length() > 0L) {
-          dots <- list(...)
-          dots <- sprintf("%s = %s", names(dots), dots)
-          sprintf(", %s", paste(dots, collapse = ", "))
-        } else {
-          ""
-        }
-      }
-
-      text <- paste(
-        sprintf("%s = %s(%s%s)", resultCols, funs, cols, dotsToCharacter(...)),
-        collapse = ", "
-      )
-
-      sprintf("list(%s)", text)
     },
 
     rmGlobalReferences = function(addr) {
@@ -508,42 +513,32 @@ DTSg <- R6Class(
         ))
       }
 
-      if (testClass(fun, "character")) {
-        expr <- expression(eval(parse(text = private$optiLapply(fun, cols, NULL, ...))))
-      } else {
-        expr <- expression(private$multiLapply(.SD, fun, ...))
+      nCols <- length(cols)
+
+      if (n && nCols == 1L) {
+        private$.values[, .n := as.integer(!is.na(get(cols)))]
       }
 
+      expr <- private$funApply(unname(fun), n = n, nCols = nCols, ...)
+
+      private$.values <- private$.values[
+        ,
+        eval(expr),
+        keyby = .(.dateTime = funby(.dateTime, .funbyHelpers)),
+        .SDcols = cols
+      ]
+
+      if (!is.null(names(fun))) {
+        resultCols <- sprintf(
+          "%s.%s",
+          rep(cols, length(fun)),
+          rep(names(fun), each = length(cols))
+        )
+
+        setnames(private$.values, 2:(length(resultCols) + 1L), resultCols)
+      }
       if (n) {
-        if (length(cols) > 1L) {
-          private$.values <- private$.values[
-            ,
-            c(eval(expr), .(.n = .N)),
-            keyby = .(.dateTime = funby(.dateTime, .funbyHelpers)),
-            .SDcols = cols
-          ]
-
-          message(".n column calculated from .dateTime column.")
-        } else {
-          private$.values <- private$.values[
-            !is.na(get(cols)),
-            c(eval(expr), .(.n = .N)),
-            keyby = .(.dateTime = funby(.dateTime, .funbyHelpers)),
-            .SDcols = cols
-          ]
-
-          message(
-            "Missing values are always stripped regardless of the value of a ",
-            'possible "na.rm" argument.'
-          )
-        }
-      } else {
-        private$.values <- private$.values[
-          ,
-          eval(expr),
-          keyby = .(.dateTime = funby(.dateTime, .funbyHelpers)),
-          .SDcols = cols
-        ]
+        setnames(private$.values, length(private$.values), ".n")
       }
 
       private$.isAggregated <- TRUE
@@ -581,7 +576,7 @@ DTSg <- R6Class(
       }
 
       if ((by != private$.periodicity || na.status == "explicit") &&
-          by != "unrecognised") {
+            by != "unrecognised") {
         if (rollback && mday(from) > 28L && grepl("^\\d+ (month|year)(s?)$", by)) {
           DT <- data.table(
             .dateTime = rollback(seq(
@@ -603,16 +598,12 @@ DTSg <- R6Class(
 
         private$.na.status <- na.status
       } else if (by != private$.periodicity && by == "unrecognised") {
-        stop(
-          'Periodicity of the time series cannot be changed to "unrecognised".',
-          call. = FALSE
-        )
+        stop('Periodicity of the time series cannot be changed to "unrecognised".')
       } else if (na.status == "explicit" && by == "unrecognised" &&
-                 private$.timestamps > 2L) {
+                   private$.timestamps > 2L) {
         warning(
           "Only time series with recognised periodicity can have explicitly missing values.\n",
-          'Consider calling "alter()" with "na.status = \'explicit\'" and specified "by" argument.',
-          call. = FALSE
+          'Consider calling "alter()" with "na.status = \'explicit\'" and specified "by" argument.'
         )
       }
 
@@ -627,10 +618,7 @@ DTSg <- R6Class(
 
         private$.na.status <- na.status
       } else if (na.status == "undecided" && private$.na.status != "undecided") {
-        stop(
-          "Status of missing values has already been decided on.",
-          call. = FALSE
-        )
+        stop("Status of missing values has already been decided on.")
       }
 
       invisible(self)
@@ -689,14 +677,14 @@ DTSg <- R6Class(
           .funbyHelpers
         ), any.missing = FALSE, len = 1L)
 
-        by <- funby(private$.values[[".dateTime"]], .funbyHelpers)
+        by <- funby(private$.values[[1L]], .funbyHelpers)
       } else {
         by <- NULL
       }
 
       if (helpers) {
         .helpers <- list(
-          .dateTime = private$.values[[".dateTime"]],
+          .dateTime = private$.values[[1L]],
           periodicity = private$.periodicity,
           minLag = private$.minLag,
           maxLag = private$.maxLag
@@ -744,10 +732,7 @@ DTSg <- R6Class(
 
       if (!is.null(pattern)) {
         if (any(names(list(...)) %chin% c("x", "value"))) {
-          stop(
-            '"x" and "value" arguments are not allowed in this context.',
-            call. = FALSE
-          )
+          stop('"x" and "value" arguments are not allowed in this context.')
         }
 
         cols <- grep(pattern, cols, value = TRUE, ...)
@@ -757,8 +742,8 @@ DTSg <- R6Class(
         qassert(mode, "S+")
 
         modes <- vapply(
-          private$.values[, cols, with = FALSE],
-          function(col) mode(col),
+          private$.values[, ..cols],
+          function(col) mode(col), # nolint
           character(1L)
         )
 
@@ -769,8 +754,8 @@ DTSg <- R6Class(
         qassert(typeof, "S+")
 
         typeofs <- vapply(
-          private$.values[, cols, with = FALSE],
-          function(col) typeof(col),
+          private$.values[, ..cols],
+          function(col) typeof(col), # nolint
           character(1L)
         )
 
@@ -851,10 +836,7 @@ DTSg <- R6Class(
       assertSetEqual(y$timezone, self$timezone)
       assertSetEqual(y$aggregated, self$aggregated)
       if (any(names(list(...)) %chin% c("x", "by", "by.x", "by.y"))) {
-        stop(
-          '"x", "by", "by.x" and "by.y" arguments are not allowed in this context.',
-          call. = FALSE
-        )
+        stop('"x", "by", "by.x" and "by.y" arguments are not allowed in this context.')
       }
       qassert(clone, "B1")
 
@@ -937,11 +919,8 @@ DTSg <- R6Class(
       secAxisLabel = ""
     ) {
       if (!requireNamespace("dygraphs", quietly = TRUE) ||
-          !requireNamespace("RColorBrewer", quietly = TRUE)) {
-        stop(
-          'Packages "dygraphs" and "RColorBrewer" must be installed for this method.',
-          call. = FALSE
-        )
+            !requireNamespace("RColorBrewer", quietly = TRUE)) {
+        stop('Packages "dygraphs" and "RColorBrewer" must be installed for this method.')
       }
       from <- private$determineFrom(from)
       to <- private$determineTo(to, from)
@@ -963,8 +942,7 @@ DTSg <- R6Class(
       plot <- dygraphs::dygraph(
         as.xts.data.table(private$.values[
           between(.dateTime, from, to),
-          c(".dateTime", cols),
-          with = FALSE
+          c(".dateTime", ..cols)
         ]),
         private$.ID,
         ylab = ylab
@@ -1001,7 +979,7 @@ DTSg <- R6Class(
 
     print = function() {
       cat(  "Values:\n")
-      print(private$.values, nrows = 11L, class = TRUE)
+      print(private$.values, nrows = 11L, class = TRUE, print.keys = FALSE)
       cat(  "\n")
       if (private$.ID != "") {
         cat("ID:             ", private$.ID          , "\n", sep = "")
@@ -1070,10 +1048,7 @@ DTSg <- R6Class(
       seqLen <- seq_len(private$determineLen(private$.timestamps))
 
       if (anyNA(private$.values[[1L]][seqLen])) {
-        stop(
-          ".dateTime column must not have any missing values.",
-          call. = FALSE
-        )
+        stop(".dateTime column must not have any missing values.")
       }
 
       if (private$.timestamps < 2L) {
@@ -1085,7 +1060,7 @@ DTSg <- R6Class(
         lags <- round(diff(private$.values[[1L]][seqLen]), 6L)
 
         if (any(lags == 0)) {
-          stop(".dateTime column must not have any duplicates.", call. = FALSE)
+          stop(".dateTime column must not have any duplicates.")
         }
 
         private$.minLag <- min(lags)
@@ -1124,7 +1099,7 @@ DTSg <- R6Class(
             DT <- private$.values[DT, on = sprintf("%s == .dateTime", firstCol)]
             lags <- diff(DT[[1L]])
             if (all(lags >= private$.minLag) && all(lags <= private$.maxLag) &&
-                sum(!is.na(DT[, -1L])) == sum(!is.na(private$.values[seqLen, -1L]))) {
+                  sum(!is.na(DT[, -1L])) == sum(!is.na(private$.values[seqLen, -1L]))) {
               private$.periodicity <- by
 
               break
@@ -1313,31 +1288,14 @@ DTSg <- R6Class(
         ))
       }
 
-      if (testClass(fun, "character")) {
-        private$.values[
-          ,
-          (resultCols) := eval(parse(text = private$optiLapply(
-            fun,
-            "unlist(.SD, recursive = FALSE)",
-            resultCols,
-            ...
-          ))),
-          by = seq_len(private$.timestamps),
-          .SDcols = cols
-        ]
-      } else {
-        private$.values[
-          ,
-          (resultCols) := lapply(
-            fun,
-            function(fun, x, ...) fun(x, ...),
-            x = unlist(.SD, recursive = FALSE),
-            ... = ...
-          ),
-          by = seq_len(private$.timestamps),
-          .SDcols = cols
-        ]
-      }
+      expr <- private$funApply(unname(fun), rowaggregate = TRUE, ...)
+
+      private$.values[
+        ,
+        (resultCols) := eval(expr),
+        by = seq_len(private$.timestamps),
+        .SDcols = cols
+      ]
 
       invisible(self)
     },
@@ -1412,7 +1370,7 @@ DTSg <- R6Class(
       cols <- private$extractCols(cols)
       values <- private$extractCols(
         values,
-        colon = FALSE,
+        isSelect = FALSE,
         len = length(cols)
       )
       assertNoStartingDot(values)
@@ -1439,13 +1397,13 @@ DTSg <- R6Class(
       }
       cols <- private$extractCols(
         cols,
-        colon = FALSE
+        isSelect = FALSE
       )
       assertNoStartingDot(cols)
-      if (length(cols) == length(names(private$.values)) - 1L &&
-          ((is.list(values) && all(vapply(values, is.null, logical(1L)))) ||
-          is.null(values))) {
-        stop("Removing all value columns is not allowed.", call. = FALSE)
+      if (setequal(cols, names(private$.values)[-1L]) &&
+            ((is.list(values) && all(vapply(values, is.null, logical(1L)))) ||
+            is.null(values))) {
+        stop("Removing all value columns is not allowed.")
       }
       qassert(clone, "B1")
 
@@ -1532,10 +1490,10 @@ DTSg <- R6Class(
           ]
           values[, .group := NULL]
         } else {
-          values <- private$.values[eval(i), cols, with = FALSE]
+          values <- private$.values[eval(i), ..cols]
         }
       } else {
-        values <- private$.values[, cols, with = FALSE]
+        values <- private$.values[, ..cols]
       }
 
       assertDataTable(values, min.rows = 1L, .var.name = "self$values(reference = TRUE)")
@@ -1551,7 +1509,7 @@ DTSg <- R6Class(
     summary = function(cols = self$cols(), ...) {
       cols <- private$extractCols(cols)
 
-      summary(private$.values[, cols, with = FALSE], ...)
+      summary(private$.values[, ..cols], ...)
     },
 
     values = function(
@@ -1671,7 +1629,7 @@ DTSg <- R6Class(
       if (missing(value)) {
         private$.isRegular
       } else {
-        stop("Read-only field.", call. = FALSE)
+        stop("Read-only field.")
       }
     },
 
@@ -1679,7 +1637,7 @@ DTSg <- R6Class(
       if (missing(value)) {
         private$.timestamps
       } else {
-        stop("Read-only field.", call. = FALSE)
+        stop("Read-only field.")
       }
     },
 
@@ -1690,7 +1648,7 @@ DTSg <- R6Class(
         qassert(value, "S1")
         assertSubset(value, OlsonNames())
 
-        attr(private$.values[[".dateTime"]], "tzone") <- value
+        attr(private$.values[[1L]], "tzone") <- value
         private$.timezone <- value
 
         invisible(self)

@@ -27,18 +27,15 @@ S3WrapperGenerator <- function(R6Method, self = "x", dots = TRUE) {
     R6Method <- as.expression(substitute(R6Method))
   }
   if (!is.expression(R6Method) ||
-      R6Method[[1L]][[2L]][[3L]] != "public_methods" ||
-      !is.R6Class(eval(R6Method[[1L]][[2L]][[2L]]))) {
-    stop(
-      '"R6Method" must contain a public method of an "R6ClassGenerator".',
-      call. = FALSE
-    )
+        R6Method[[1L]][[2L]][[3L]] != "public_methods" ||
+        !is.R6Class(eval(R6Method[[1L]][[2L]][[2L]]))) {
+    stop('"R6Method" must contain a public method of an "R6ClassGenerator".')
   }
   qassert(self, "S1")
   qassert(dots, "B1")
 
   args <- list()
-  args[[self]] <- alist(`self` = )$`self`
+  args[[self]] <- alist(self = )$self
   args <- c(args, formals(eval(R6Method)))
 
   if (dots && !any(names(args) == "...")) {
@@ -93,10 +90,11 @@ NULL
 #' @param funbyHelpers An optional [`list`] with helper data passed on to
 #'   `funby`. See corresponding section for further information.
 #' @param funbyApproach A character string specifying the flavour of the applied
-#'   temporal aggregation level function. Either `"base"`, which utilises
-#'   [`as.POSIXct`], or `"fasttime"`, which utilises [`fasttime::fastPOSIXct`],
-#'   or `"RcppCCTZ"`, which utilises [`RcppCCTZ::parseDatetime`] as the main
-#'   function for transforming timestamps.
+#'   temporal aggregation level function. Either `"timechange"`, which utilises
+#'   [`timechange::time_floor`], or `"base"`, which utilises [`as.POSIXct`], or
+#'   `"fasttime"`, which utilises [`fasttime::fastPOSIXct`], or `"RcppCCTZ"`,
+#'   which utilises [`RcppCCTZ::parseDatetime`] as the main function for
+#'   transforming timestamps.
 #' @param clone A logical specifying if the object shall be modified in place or
 #'   if a deep clone (copy) shall be made beforehand.
 #'
@@ -113,7 +111,7 @@ NULL
 #' * _funbyApproach:_ Same as the `funbyApproach` argument.
 #'
 #' Any additional element specified in the `funbyHelpers` argument is appended
-#' to the end of the helper data [`list`]. In case `funbyHelpers` contains an
+#' to the end of the default [`list`]. In case `funbyHelpers` contains an
 #' _ignoreDST, multiplier_ or _funbyApproach_ element, it takes precedence over
 #' the respective method argument. _timezone, periodicity_ and _na.status_
 #' elements are rejected, as they are always taken directly from the object.
@@ -150,8 +148,7 @@ NULL
 #' Depending on the number of columns to aggregate, the `.n` column contains
 #' different counts:
 #' * One column: The counts are calculated from the columns' values disregarding
-#' any missing values. This means that missing values are always stripped
-#' regardless of the value of a possible `na.rm` argument.
+#' any missing values.
 #' * More than one column: The counts are calculated from the _.dateTime_ column
 #' including all missing values.
 #'
@@ -163,8 +160,8 @@ NULL
 #' are preserved by all means and all intervals are of the \dQuote{correct}
 #' length, however, a possible limitation might be that the day saving time
 #' shift is invariably assumed to be one hour long. This feature requires that
-#' the periodicity of the time series was recognised and is supported by the
-#' following [`TALFs`] of the package:
+#' the periodicity of the time series has been recognised and is supported by
+#' the following [`TALFs`] of the package:
 #' * \code{\link{byY_____}}
 #' * \code{\link{byYQ____}}
 #' * \code{\link{byYm____}}

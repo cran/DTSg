@@ -1,17 +1,17 @@
-## ----setup, include=FALSE------------------------------------------------
+## ----setup, include=FALSE-----------------------------------------------------
 knitr::opts_chunk$set(
   collapse = TRUE,
   comment = "#>"
 )
 
-## ------------------------------------------------------------------------
+## -----------------------------------------------------------------------------
 library(DTSg)
 
 data(flow)
 TS <- DTSg$new(flow)
 TS
 
-## ------------------------------------------------------------------------
+## -----------------------------------------------------------------------------
 TS$alter("2007-01-01", "2008-12-31")
 # `TS` was deep cloned before shortening it, hence its end date is still in the
 # year 2012
@@ -24,11 +24,11 @@ getOption("DTSgClone")
 TS$alter("2007-01-01", "2008-12-31")
 TS
 
-## ------------------------------------------------------------------------
+## -----------------------------------------------------------------------------
 TSc <- TS$clone(deep = TRUE)
 # or 'clone(TS, deep = TRUE)'
 
-## ------------------------------------------------------------------------
+## -----------------------------------------------------------------------------
 TS <- DTSg$
   new(flow)$
   alter("2007-01-01", "2008-12-31")$
@@ -36,18 +36,14 @@ TS <- DTSg$
   aggregate(byYm____, mean)
 TS
 
-## ------------------------------------------------------------------------
-if (requireNamespace("magrittr", quietly = TRUE)) {
-  library(magrittr)
+## -----------------------------------------------------------------------------
+TS <- new("DTSg", flow) |>
+  alter("2007-01-01", "2008-12-31") |>
+  colapply(interpolateLinear) |>
+  aggregate(byYm____, mean)
+TS
 
-  TS <- new("DTSg", flow) %>%
-    alter("2007-01-01", "2008-12-31") %>%
-    colapply(interpolateLinear) %>%
-    aggregate(byYm____, mean)
-  TS
-}
-
-## ------------------------------------------------------------------------
+## -----------------------------------------------------------------------------
 library(data.table)
 
 DT <- copy(flow)
@@ -55,20 +51,20 @@ ls(pattern = "^DT$")
 TS <- DTSg$new(DT, swallow = TRUE)
 ls(pattern = "^DT$")
 
-## ------------------------------------------------------------------------
+## -----------------------------------------------------------------------------
 TS <- DTSg$new(flow)
 ls(pattern = "^TS$")
 DT <- TS$values(drop = TRUE)
 ls(pattern = "^TS$")
 
-## ------------------------------------------------------------------------
+## -----------------------------------------------------------------------------
 # add a new column recording if a certain value is missing or not before
 # carrying out a linear interpolation
 TS <- DTSg$new(flow)
 TS$summary()
 TS$
   colapply(
-    function(x, ...) ifelse(is.na(x), TRUE, FALSE),
+    function(x, ...) is.na(x),
     resultCols = "missing"
   )$
   colapply(interpolateLinear)$

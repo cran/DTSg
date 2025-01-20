@@ -58,10 +58,11 @@ for further information.}
 \code{funby}. See corresponding section for further information.}
 
 \item{funbyApproach}{A character string specifying the flavour of the applied
-temporal aggregation level function. Either \code{"base"}, which utilises
-\code{\link{as.POSIXct}}, or \code{"fasttime"}, which utilises \code{\link[fasttime:fastPOSIXct]{fasttime::fastPOSIXct}},
-or \code{"RcppCCTZ"}, which utilises \code{\link[RcppCCTZ:parseDatetime]{RcppCCTZ::parseDatetime}} as the main
-function for transforming timestamps.}
+temporal aggregation level function. Either \code{"timechange"}, which utilises
+\code{\link[timechange:time_round]{timechange::time_floor}}, or \code{"base"}, which utilises \code{\link{as.POSIXct}}, or
+\code{"fasttime"}, which utilises \code{\link[fasttime:fastPOSIXct]{fasttime::fastPOSIXct}}, or \code{"RcppCCTZ"},
+which utilises \code{\link[RcppCCTZ:parseDatetime]{RcppCCTZ::parseDatetime}} as the main function for
+transforming timestamps.}
 
 \item{...}{Further arguments passed on to \code{fun}.}
 }
@@ -96,7 +97,7 @@ as its second. The default elements of this \code{\link{list}} are as follows:
 }
 
 Any additional element specified in the \code{funbyHelpers} argument is appended
-to the end of the helper data \code{\link{list}}. In case \code{funbyHelpers} contains an
+to the end of the default \code{\link{list}}. In case \code{funbyHelpers} contains an
 \emph{ignoreDST, multiplier} or \emph{funbyApproach} element, it takes precedence over
 the respective method argument. \emph{timezone, periodicity} and \emph{na.status}
 elements are rejected, as they are always taken directly from the object.
@@ -130,8 +131,8 @@ such as hydrological time series. Doing so ensures that diurnal variations
 are preserved by all means and all intervals are of the \dQuote{correct}
 length, however, a possible limitation might be that the day saving time
 shift is invariably assumed to be one hour long. This feature requires that
-the periodicity of the time series was recognised and is supported by the
-following \code{\link{TALFs}} of the package:
+the periodicity of the time series has been recognised and is supported by
+the following \code{\link{TALFs}} of the package:
 \itemize{
 \item \code{\link{byY_____}}
 \item \code{\link{byYQ____}}
